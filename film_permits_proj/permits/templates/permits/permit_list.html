@@ -37,6 +37,8 @@
                     <th>Category</th>
                     <th>Subcategory</th>
                     <th>Location</th>
+                    <th>Latitude</th>
+                    <th>Longitude</th>
                 </tr>
             </thead>
             <thead>
@@ -49,6 +51,8 @@
                     <th><input type="text" placeholder="Search Category"></th>
                     <th><input type="text" placeholder="Search Subcategory"></th>
                     <th><input type="text" placeholder="Search Location"></th>
+                    <th><input type="text" placeholder="Search Lat"></th>
+                    <th><input type="text" placeholder="Search Lon"></th>
                 </tr>
             </thead>
             <tbody>
@@ -62,7 +66,9 @@
                     <td>{{ permit.category }}</td>
                     <td>{{ permit.subcategory }}</td>
                     <td>{{ permit.parking_held }}</td>
-                    
+                    <td>{{ permit.lat }}</td>
+                    <td>{{ permit.lon }}</td>
+
                 </tr>
                 {% endfor %}
             </tbody>
