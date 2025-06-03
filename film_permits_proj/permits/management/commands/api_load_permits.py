@@ -5,9 +5,10 @@ from permits.models import Permit
 
 class Command(BaseCommand):
     def handle(self, *args, **kwargs):
-        url = "https://data.cityofnewyork.us/resource/tg4x-b46p.json"
-        # no API key needed
-
+        # url = "https://data.cityofnewyork.us/resource/tg4x-b46p.json"
+        url = "https://data.cityofnewyork.us/resource/tg4x-b46p.json?$limit=20000"
+        # no API key needed, ~12k rows as of June 2025
+        # https://dev.socrata.com/docs/queries/ api documentation
         try:
             response = requests.get(url)
             response.raise_for_status()
