@@ -35,7 +35,7 @@ ALLOWED_HOSTS = [
     'localhost',
     'www.amandalaz.com', 
     'amandalaz.com', 
-    '165.227.102.107']
+    '165.227.65.216']
 
 # Application definition
 
