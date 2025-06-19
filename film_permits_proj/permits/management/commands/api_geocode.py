@@ -1,8 +1,9 @@
 from django.core.management import BaseCommand
 import requests
 from permits.models import Permit
+from decouple import config
 
-SUBSCRIPTION_KEY = "17b2724cb1464fb59ead312fe97c4b04"
+SUBSCRIPTION_KEY = config('SUBSCRIPTION_KEY')
 
 # parse address string to match geoclient api formatting
 def parse_blockface(text):
@@ -27,7 +28,7 @@ def geocode_blockface(on_street, cross_street_one, cross_street_two, borough):
     headers = {
         "Ocp-Apim-Subscription-Key": SUBSCRIPTION_KEY }
     
-    response = requests.get(url, params=params, headers=headers)
+    response = requests.get(url, params=params, headers=headers, timeout=5)
     try:
         data = response.json()['blockface']
         if data.get("geosupportReturnCode") == "00":
@@ -42,8 +43,13 @@ def geocode_blockface(on_street, cross_street_one, cross_street_two, borough):
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
+        # total = Permit.objects.count()
         # print(type(Permit)) returns <class 'django.db.models.base.ModelBase'>
-        for i in Permit.objects.all(): # .objects.all(): makes it iterable # limit 5 [:5]:
+        qs = Permit.objects.filter(lat__isnull=True, lon__isnull=True)
+        total = qs.count()
+
+        # for idx, i in enumerate(Permit.objects.all(), start=1): #.objects.all(): makes it iterable #limit 5 [:5]:
+        for idx, i in enumerate(qs, start=1):
             text = i.parking_held.split(",")[0]
             borough = i.borough
             event_id = i.event_id
@@ -55,20 +61,14 @@ class Command(BaseCommand):
             # print(i, event_id, lat, lon)
             # print("----") # example i: 836995 - Shooting Permit
 
-            # i.id how to update record in model (objects update) 
+            # update record in model
             if lat and lon:
                 i.lat = lat
                 i.lon = lon
                 i.save()
-
-            # update to have better logging??
-            # if lat and lon:
-            #     i.lat = lat
-            #     i.lon = lon
-            #     i.save()
-            #     self.stdout.write(f"[{idx}/{total}] ✅ Updated {event_id} → ({lat:.5f}, {lon:.5f})")
-            # else:
-            #     self.stdout.write(f"[{idx}/{total}] ❌ Failed to geocode {event_id}")
+                self.stdout.write(f"[{idx}/{total}] ✅ Updated")
+            else:
+                self.stdout.write(f"[{idx}/{total}] ❌ Failed to geocode {event_id}")
 
 
 

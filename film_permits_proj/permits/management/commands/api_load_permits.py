@@ -1,14 +1,17 @@
 from django.core.management import BaseCommand
 import requests
 from django.utils.dateparse import parse_datetime
+from pytz import timezone
 from permits.models import Permit
+
+eastern = timezone('US/Eastern')
 
 class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         # url = "https://data.cityofnewyork.us/resource/tg4x-b46p.json"
-        url = "https://data.cityofnewyork.us/resource/tg4x-b46p.json?$limit=20000"
+        url = "https://data.cityofnewyork.us/resource/tg4x-b46p.json?$limit=25000"
         # no API key needed, ~12k rows as of June 2025
-        # https://dev.socrata.com/docs/queries/ api documentation
+        # api documentation: https://dev.socrata.com/docs/queries/ 
         try:
             response = requests.get(url)
             response.raise_for_status()
@@ -25,6 +28,12 @@ class Command(BaseCommand):
                 event_type = entry.get("eventtype")
                 start_datetime = parse_datetime(entry.get("startdatetime"))
                 end_datetime = parse_datetime(entry.get("enddatetime"))
+
+                if start_datetime and start_datetime.tzinfo is None:
+                    start_datetime = eastern.localize(start_datetime)
+                if end_datetime and end_datetime.tzinfo is None:
+                    end_datetime = eastern.localize(end_datetime)
+
                 parking_held = entry.get("parkingheld", "")
                 borough = entry.get("borough", "")
                 community_boards = entry.get("communityboard_s", "")
