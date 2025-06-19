@@ -1,623 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
+  <title> NYC Film Permits Map</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Film Permits Map</title>
-
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- leaflet css -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
 
+  <!-- css styling -->
   <style>
+    html,
     body {
-      font-family: 'Inter', sans-serif;
-      background-color: #f8f9fa;
-      transition: background-color 0.3s ease;
-    }
-    .dark-mode body {
-      background-color: #121212;
-    }
-    .sidebar {
-      width: 250px;
-      position: fixed;
-      top: 0;
-      bottom: 0;
-      left: 0;
-      padding: 1rem;
-      background-color: #fff;
-      border-right: 1px solid #dee2e6;
-      overflow-y: auto;
-      transition: background-color 0.3s ease, color 0.3s ease;
-    }
-    .dark-mode .sidebar {
-      background-color: #1e1e1e;
-      color: #f1f1f1;
-    }
-    .sidebar h2 {
-      font-size: 1.25rem;
-      margin-bottom: 1rem;
-    }
-    .content {
-      margin-left: 260px;
-      padding: 1.5rem;
-      background-color: #fff;
-      transition: background-color 0.3s ease, color 0.3s ease;
-    }
-    .dark-mode .content {
-      background-color: #1e1e1e;
-      color: #f1f1f1;
-    }
-    #map {
-      height: 600px;
-    }
-    label {
-      font-size: 0.875rem;
-      font-weight: 500;
-      margin-bottom: 0.25rem;
-    }
-    select, input[type="date"] {
-      font-size: 0.875rem;
-      margin-bottom: 1rem;
-    }
-    .dark-mode select,
-    .dark-mode input[type="date"] {
-      background-color: #2c2c2c;
-      color: #f1f1f1;
-      border: 1px solid #444;
-    }
-    .dark-mode-toggle {
-      margin-top: 1rem;
+      height: 100%;
+      margin: 0;
+      padding: 0;
       display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      cursor: pointer;
-      font-size: 0.875rem;
-    }
-  </style>
-</head>
-<body>
-  <div class="sidebar">
-    <h2>Filters</h2>
-    <label for="borough-filter">Borough</label>
-    <select class="form-select form-select-sm" id="borough-filter">
-      <option value="">All Boroughs</option>
-    </select>
-
-    <label for="event-type-filter">Event Type</label>
-    <select class="form-select form-select-sm" id="event-type-filter">
-      <option value="">All Event Types</option>
-    </select>
-
-    <label for="start-date-filter">Start Date</label>
-    <input type="date" class="form-control form-control-sm" id="start-date-filter" />
-
-    <label for="end-date-filter">End Date</label>
-    <input type="date" class="form-control form-control-sm" id="end-date-filter" />
-
-    <div class="dark-mode-toggle" onclick="toggleDarkMode()">
-      <span id="theme-icon">🌙</span>
-      <span id="theme-label">Dark Mode</span>
-    </div>
-  </div>
-
-  <div class="content">
-    <h1 class="mb-3" id="map-title">NYC Film Permits Map</h1>
-    <div id="map"></div>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  {{ permits|json_script:"permit-data" }}
-
-  <script>
-    const rawData = JSON.parse(document.getElementById("permit-data").textContent);
-    const map = L.map("map").setView([40.7306, -73.9352], 12);
-    const markerGroup = L.layerGroup().addTo(map);
-
-    let lightTileLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-      attribution: "&copy; OpenStreetMap contributors & CARTO",
-      subdomains: "abcd",
-      maxZoom: 19
-    }).addTo(map);
-
-    let darkTileLayer = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", {
-      attribution: "Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ",
-      maxZoom: 16
-    });
-
-    const blueIcon = L.icon({
-      iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
-      iconSize: [22, 35],
-      iconAnchor: [11, 35],
-      popupAnchor: [0, -30],
-      shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-      shadowSize: [35, 35]
-    });
-
-    const boroughSelect = document.getElementById("borough-filter");
-    const eventTypeSelect = document.getElementById("event-type-filter");
-    const startDateInput = document.getElementById("start-date-filter");
-    const endDateInput = document.getElementById("end-date-filter");
-
-    const boroughs = new Set();
-    const eventTypes = new Set();
-    rawData.forEach(p => {
-      if (p.borough) boroughs.add(p.borough);
-      if (p.event_type) eventTypes.add(p.event_type);
-    });
-
-    boroughs.forEach(b => {
-      const option = document.createElement("option");
-      option.value = b;
-      option.textContent = b;
-      boroughSelect.appendChild(option);
-    });
-
-    eventTypes.forEach(e => {
-      const option = document.createElement("option");
-      option.value = e;
-      option.textContent = e;
-      eventTypeSelect.appendChild(option);
-    });
-
-    function updateMarkers() {
-      markerGroup.clearLayers();
-
-      const selectedBorough = boroughSelect.value;
-      const selectedType = eventTypeSelect.value;
-      const startDate = startDateInput.value;
-      const endDate = endDateInput.value;
-
-      rawData.forEach(p => {
-        const matchesBorough = !selectedBorough || p.borough === selectedBorough;
-        const matchesType = !selectedType || p.event_type === selectedType;
-
-        const permitStart = new Date(p.start_datetime);
-        const permitEnd = new Date(p.end_datetime);
-        const filterStart = startDate ? new Date(startDate) : null;
-        const filterEnd = endDate ? new Date(endDate) : null;
-
-        const matchesDate = (!filterStart || permitEnd >= filterStart) && (!filterEnd || permitStart <= filterEnd);
-
-        if (matchesBorough && matchesType && matchesDate) {
-          const startFmt = new Date(p.start_datetime).toLocaleString("en-US", {
-            dateStyle: "medium",
-            timeStyle: "short"
-          });
-          const endFmt = new Date(p.end_datetime).toLocaleString("en-US", {
-            dateStyle: "medium",
-            timeStyle: "short"
-          });
-
-          const popupHtml = `
-            <strong>Event ID:</strong> ${p.event_id}<br>
-            <strong>Type:</strong> ${p.event_type}<br>
-            <strong>Borough:</strong> ${p.borough}<br>
-            <strong>Start:</strong> ${startFmt}<br>
-            <strong>End:</strong> ${endFmt}
-          `;
-
-          L.marker([p.lat, p.lon], { icon: blueIcon })
-            .addTo(markerGroup)
-            .bindPopup(popupHtml);
-        }
-      });
+      flex-direction: column;
     }
 
-    boroughSelect.addEventListener("change", updateMarkers);
-    eventTypeSelect.addEventListener("change", updateMarkers);
-    startDateInput.addEventListener("change", updateMarkers);
-    endDateInput.addEventListener("change", updateMarkers);
-
-    updateMarkers();
-
-    function toggleDarkMode() {
-      document.documentElement.classList.toggle("dark-mode");
-      const icon = document.getElementById("theme-icon");
-      const label = document.getElementById("theme-label");
-      const isDark = document.documentElement.classList.contains("dark-mode");
-
-      if (isDark) {
-        map.removeLayer(lightTileLayer);
-        darkTileLayer.addTo(map);
-        icon.textContent = "☀️";
-        label.textContent = "Light Mode";
-      } else {
-        map.removeLayer(darkTileLayer);
-        lightTileLayer.addTo(map);
-        icon.textContent = "🌙";
-        label.textContent = "Dark Mode";
-      }
-    }
-  </script>
-</body>
-</html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!-- ------ bootstrap, no dark mode version  -->
-<!--
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title> Film Permits Map</title>
-
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #f8f9fa;
-    }
-    .sidebar {
-      width: 250px;
-      position: fixed;
-      top: 0;
-      bottom: 0;
-      left: 0;
+    header {
       padding: 1rem;
-      background-color: #fff;
-      border-right: 1px solid #dee2e6;
-      overflow-y: auto;
+      background-color: #f8f9fa;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
-    .sidebar h2 {
-      font-size: 1.25rem;
-      margin-bottom: 1rem;
+
+    .map-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.75rem;
+      text-align: center;
+      margin: 0;
     }
-    .content {
-      margin-left: 260px;
-      padding: 1.5rem;
-    }
+
     #map {
-      height: 600px;
-    }
-    label {
-      font-size: 0.875rem;
-      font-weight: 500;
-      margin-bottom: 0.25rem;
-    }
-    select, input[type="date"] {
-      font-size: 0.875rem;
-      margin-bottom: 1rem;
+      flex-grow: 1;
+      width: 100%;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
   </style>
 </head>
+
 <body>
-  <div class="sidebar">
-    <h2>Filters</h2>
-    <label for="borough-filter">Borough</label>
-    <select class="form-select form-select-sm" id="borough-filter">
-      <option value="">All Boroughs</option>
-    </select>
+  <!-- title -->
+  <header>
+    <h1 class="map-title">🎬  NYC Film Permits Map </h1>
+  </header>
 
-    <label for="event-type-filter">Event Type</label>
-    <select class="form-select form-select-sm" id="event-type-filter">
-      <option value="">All Event Types</option>
-    </select>
+  <!-- map container-->
+  <div id="map"></div>
 
-    <label for="start-date-filter">Start Date</label>
-    <input type="date" class="form-control form-control-sm" id="start-date-filter" />
-
-    <label for="end-date-filter">End Date</label>
-    <input type="date" class="form-control form-control-sm" id="end-date-filter" />
-  </div>
-
-  <div class="content">
-    <h1 class="mb-3">NYC Film Permits Map</h1>
-    <div id="map"></div>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- js: leaflet & MarkerCluster -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  {{ permits|json_script:"permit-data" }}
+  <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
 
+  <!-- load permit data -->
+  {{ permits|json_script:"permit-data" }}
   <script>
     const rawData = JSON.parse(document.getElementById("permit-data").textContent);
     const map = L.map("map").setView([40.7306, -73.9352], 12);
-    const markerGroup = L.layerGroup().addTo(map);
 
+    // add basemap layer
     L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
       attribution: "&copy; OpenStreetMap contributors & CARTO",
       subdomains: "abcd",
       maxZoom: 19
     }).addTo(map);
 
+    // define icon styling
     const blueIcon = L.icon({
       iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
-      iconSize: [22, 35],
-      iconAnchor: [11, 35],
-      popupAnchor: [0, -30],
+      iconSize: [16, 25],
+      iconAnchor: [8, 25],
+      popupAnchor: [0, -20],
       shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-      shadowSize: [35, 35]
+      shadowSize: [25, 25]
     });
 
-    const boroughSelect = document.getElementById("borough-filter");
-    const eventTypeSelect = document.getElementById("event-type-filter");
-    const startDateInput = document.getElementById("start-date-filter");
-    const endDateInput = document.getElementById("end-date-filter");
-
-    const boroughs = new Set();
-    const eventTypes = new Set();
+    // cluster
+    const markers = L.markerClusterGroup();
     rawData.forEach(p => {
-      if (p.borough) boroughs.add(p.borough);
-      if (p.event_type) eventTypes.add(p.event_type);
+      if (p.lat && p.lon) {
+        const popup = `
+          <strong>Event ID:</strong> ${p.event_id}<br>
+          <strong>Type:</strong> ${p.event_type}<br>
+          <strong>Borough:</strong> ${p.borough}<br>
+          <strong>Start:</strong> ${new Date(p.start_datetime).toLocaleString()}<br>
+          <strong>End:</strong> ${new Date(p.end_datetime).toLocaleString()}
+        `;
+        L.marker([p.lat, p.lon], { icon: blueIcon }).bindPopup(popup).addTo(markers);
+      }
     });
 
-    boroughs.forEach(b => {
-      const option = document.createElement("option");
-      option.value = b;
-      option.textContent = b;
-      boroughSelect.appendChild(option);
-    });
-
-    eventTypes.forEach(e => {
-      const option = document.createElement("option");
-      option.value = e;
-      option.textContent = e;
-      eventTypeSelect.appendChild(option);
-    });
-
-    function updateMarkers() {
-      markerGroup.clearLayers();
-
-      const selectedBorough = boroughSelect.value;
-      const selectedType = eventTypeSelect.value;
-      const startDate = startDateInput.value;
-      const endDate = endDateInput.value;
-
-      rawData.forEach(p => {
-        const matchesBorough = !selectedBorough || p.borough === selectedBorough;
-        const matchesType = !selectedType || p.event_type === selectedType;
-
-        const permitStart = new Date(p.start_datetime);
-        const permitEnd = new Date(p.end_datetime);
-        const filterStart = startDate ? new Date(startDate) : null;
-        const filterEnd = endDate ? new Date(endDate) : null;
-
-        const matchesDate =
-          (!filterStart || permitEnd >= filterStart) &&
-          (!filterEnd || permitStart <= filterEnd);
-
-        if (matchesBorough && matchesType && matchesDate) {
-          const startFmt = new Date(p.start_datetime).toLocaleString("en-US", {
-            dateStyle: "medium",
-            timeStyle: "short"
-          });
-          const endFmt = new Date(p.end_datetime).toLocaleString("en-US", {
-            dateStyle: "medium",
-            timeStyle: "short"
-          });
-
-          const popupHtml = `
-            <strong>Event ID:</strong> ${p.event_id}<br>
-            <strong>Type:</strong> ${p.event_type}<br>
-            <strong>Borough:</strong> ${p.borough}<br>
-            <strong>Start:</strong> ${startFmt}<br>
-            <strong>End:</strong> ${endFmt}
-          `;
-
-          L.marker([p.lat, p.lon], { icon: blueIcon })
-            .addTo(markerGroup)
-            .bindPopup(popupHtml);
-        }
-      });
-    }
-
-    boroughSelect.addEventListener("change", updateMarkers);
-    eventTypeSelect.addEventListener("change", updateMarkers);
-    startDateInput.addEventListener("change", updateMarkers);
-    endDateInput.addEventListener("change", updateMarkers);
-
-    updateMarkers();
+    // add to map
+    map.addLayer(markers);
   </script>
 </body>
-</html>  -->
 
-
-
-
-
-<!-- ------ no bootstrap version  -->
-
-
-<!-- <!DOCTYPE html>
-<html>
-
-<head>
-    <title>Permit Map</title>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
-        #map {
-            height: 600px;
-            margin-top: 1rem;
-        }
-
-        #filters {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            margin-bottom: 0.5rem;
-        }
-
-        label {
-            font-weight: bold;
-        }
-    </style>
-</head>
-
-<body>
-    <h1>Permit Map</h1>
-
-    <div id="filters">
-        <label>
-            Borough:
-            <select id="borough-filter">
-                <option value="">All Boroughs</option>
-            </select>
-        </label>
-
-        <label>
-            Event Type:
-            <select id="event-type-filter">
-                <option value="">All Event Types</option>
-            </select>
-        </label>
-
-        <label>
-            Start Date:
-            <input type="date" id="start-date-filter" />
-        </label>
-
-        <label>
-            End Date:
-            <input type="date" id="end-date-filter" />
-        </label>
-    </div>
-
-    <div id="map"></div>
-
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    {{ permits|json_script:"permit-data" }}
-
-    <script>
-        const rawData = JSON.parse(document.getElementById("permit-data").textContent);
-        const map = L.map("map").setView([40.7306, -73.9352], 13);
-        const markerGroup = L.layerGroup().addTo(map);
-
-        // L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        //   attribution: "&copy; OpenStreetMap contributors",
-        // }).addTo(map);
-
-        L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-            attribution: "&copy; OpenStreetMap contributors & CARTO",
-            subdomains: "abcd",
-            maxZoom: 19
-        }).addTo(map);
-
-        const boroughs = new Set();
-        const eventTypes = new Set();
-        rawData.forEach(p => {
-            if (p.borough) boroughs.add(p.borough);
-            if (p.event_type) eventTypes.add(p.event_type);
-        });
-
-        const boroughSelect = document.getElementById("borough-filter");
-        const eventTypeSelect = document.getElementById("event-type-filter");
-        const startDateInput = document.getElementById("start-date-filter");
-        const endDateInput = document.getElementById("end-date-filter");
-
-        boroughs.forEach(b => {
-            const option = document.createElement("option");
-            option.value = b;
-            option.textContent = b;
-            boroughSelect.appendChild(option);
-        });
-
-        eventTypes.forEach(e => {
-            const option = document.createElement("option");
-            option.value = e;
-            option.textContent = e;
-            eventTypeSelect.appendChild(option);
-        });
-
-        // marker formatting
-        const smallBlueIcon = L.icon({
-            iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",            
-            iconSize: [20, 32],      // 👈 smaller than default [25, 41]
-            iconAnchor: [10, 32],
-            popupAnchor: [1, -28],
-            shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-            shadowSize: [32, 32]
-        });
-
-        function updateMarkers() {
-            markerGroup.clearLayers();
-
-            const selectedBorough = boroughSelect.value;
-            const selectedType = eventTypeSelect.value;
-            const startDate = startDateInput.value;
-            const endDate = endDateInput.value;
-
-            rawData.forEach(p => {
-                const matchesBorough = !selectedBorough || p.borough === selectedBorough;
-                const matchesType = !selectedType || p.event_type === selectedType;
-
-                const permitStart = new Date(p.start_datetime);
-                const permitEnd = new Date(p.end_datetime);
-                const filterStart = startDate ? new Date(startDate) : null;
-                const filterEnd = endDate ? new Date(endDate) : null;
-
-                const matchesDate =
-                    (!filterStart || permitEnd >= filterStart) &&
-                    (!filterEnd || permitStart <= filterEnd);
-
-                if (matchesBorough && matchesType && matchesDate) {
-                    // L.marker([p.lat, p.lon])
-                    //     .addTo(markerGroup)
-                    // .bindPopup(`<strong>${p.event_id}</strong><br>${p.event_type}<br>${p.start_datetime}`);
-                    const startDate = new Date(p.start_datetime).toLocaleString('en-US', {
-                        dateStyle: 'medium',
-                        timeStyle: 'short'
-                    });
-                    const endDate = new Date(p.end_datetime).toLocaleString('en-US', {
-                        dateStyle: 'medium',
-                        timeStyle: 'short'
-                    });
-
-                    const popupHtml = `
-            <strong>Event ID:</strong> ${p.event_id}<br>
-            <strong>Type:</strong> ${p.event_type}<br>
-            <strong>Borough:</strong> ${p.borough}<br>
-            <strong>Start:</strong> ${startDate}<br>
-            <strong>End:</strong> ${endDate}
-            `;
-
-                    // L.marker([p.lat, p.lon])
-                    //     .addTo(markerGroup)
-                    //     .bindPopup(popupHtml);
-
-                    L.marker([p.lat, p.lon], { icon: smallBlueIcon })
-                        .addTo(markerGroup)
-                        .bindPopup(popupHtml);
-
-                    // L.circleMarker([p.lat, p.lon], {
-                    //     radius: 6,                // 👈 Smaller size (try 4–8)
-                    //     fillColor: "#0074D9",     // 💡 Customize color here
-                    //     color: "#fff",            // Outline color
-                    //     weight: 1,
-                    //     opacity: 1,
-                    //     fillOpacity: 0.9
-                    //     })
-                    //     .addTo(markerGroup)
-                    //     .bindPopup(popupHtml);
-                }
-            });
-        }
-
-        boroughSelect.addEventListener("change", updateMarkers);
-        eventTypeSelect.addEventListener("change", updateMarkers);
-        startDateInput.addEventListener("change", updateMarkers);
-        endDateInput.addEventListener("change", updateMarkers);
-
-        updateMarkers();
-    </script>
-</body>
-
-</html> -->
+</html>
