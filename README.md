@@ -1,19 +1,12 @@
-# Mapping NYC Film Permits
+# Mapping NYC Film Permits  
 
-New York City publishes film permit records through the NYC Open Data
-portal. The dataset includes information about productions, dates, and
-neighborhoods, but permit locations are stored as **text descriptions of
-street blocks rather than geographic coordinates**. 
+New York City publishes film permit records through the Mayor’s Office of
+Media and Entertainment via the NYC Open Data portal. The dataset includes
+information about productions, dates, and neighborhoods, but permit locations
+are stored as text descriptions of street blocks rather than geographic
+coordinates. Additional processing is required before the data
+can be mapped or analyzed spatially.
 
-Because these locations 
-are not structured, it is difficult to map filming activity or analyze 
-where productions are concentrated across the city.
-
-This project converts those location descriptions into a **structured
-dataset of geocoded street blocks**, enabling mapping and analysis of
-filming activity across NYC.
-
-------------------------------------------------------------------------
 
 ## Overview
 
@@ -61,6 +54,14 @@ A single permit may reference many street blocks.
 
 The `PermitBlock` model stores each block separately, enabling more
 accurate spatial mapping.
+
+Dataset coverage:          Jan 2023 – Dec 2025  
+Dataset last updated:      March 5, 2026  
+Permits loaded:            16,024  
+PermitBlock rows created:  54,145  
+Unique street blocks:      17,344  
+Average blocks per permit: 3.38  
+Geocoded blocks:           42,218 (~78%)  
 
 ------------------------------------------------------------------------
 
