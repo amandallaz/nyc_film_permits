@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>NYC Film Permits – deck.gl</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <link
+    href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css"
+    rel="stylesheet"
+  />
+
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      font-family: Arial, sans-serif;
+      background: #ffffff;
+    }
+
+    .header {
+      padding: 12px 16px;
+      border-bottom: 1px solid #e5e5e5;
+      background: #ffffff;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .header p {
+      margin: 6px 0 0;
+      color: #555;
+      font-size: 14px;
+    }
+
+    #map {
+      width: 100%;
+      height: calc(100vh - 72px);
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>NYC Film Permits</h1>
+    <p>MapLibre + deck.gl prototype using geocoded PermitBlock data</p>
+  </div>
+
+  <div id="map"></div>
+
+  {{ blocks|json_script:"block-data" }}
+
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script src="https://unpkg.com/deck.gl@^9.0.0/dist.min.js"></script>
+
+  <script>
+    const blocks = JSON.parse(document.getElementById("block-data").textContent);
+
+    const map = new maplibregl.Map({
+      container: "map",
+      style: "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json",
+      center: [-73.9352, 40.7306],
+      zoom: 10.8,
+      pitch: 35,
+      bearing: 0,
+      antialias: true
+    });
+
+    map.addControl(new maplibregl.NavigationControl(), "top-right");
+
+    const deckOverlay = new deck.MapboxOverlay({
+      interleaved: true,
+      layers: [
+      new deck.HeatmapLayer({
+        id: "permit-heat",
+        data: blocks,
+        getPosition: d => [d.lon, d.lat],
+
+        getWeight: 1,
+
+        radiusPixels: 35,
+        intensity: 1,
+        threshold: 0.03
+      })
+      ]
+    });
+
+    map.on("load", () => {
+      const layers = map.getStyle().layers;
+      const labelLayerId = layers.find(
+        layer => layer.type === "symbol" && layer.layout && layer.layout["text-field"]
+      )?.id;
+
+      map.addLayer(
+        {
+          id: "3d-buildings",
+          source: "carto",
+          "source-layer": "building",
+          type: "fill-extrusion",
+          minzoom: 12,
+          paint: {
+            "fill-extrusion-color": "#e3e3e3",
+            "fill-extrusion-opacity": 0.20,
+            "fill-extrusion-height": ["coalesce", ["get", "render_height"], ["get", "height"], 8],
+            "fill-extrusion-base": ["coalesce", ["get", "render_min_height"], ["get", "min_height"], 0]
+          }
+        },
+        labelLayerId
+      );
+
+    map.addControl(deckOverlay);
+});
+
+  </script>
+</body>
+</html>

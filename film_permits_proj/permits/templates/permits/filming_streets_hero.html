@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- Basic page metadata -->
+  <meta charset="utf-8" />
+  <title>Where New York City Films</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- MapLibre styles -->
+  <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+
+  <!-- Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400&display=swap" rel="stylesheet">
+
+  <style>
+    /* ===== Page-level defaults ===== */
+    html,
+    body {
+      margin: 0;
+      font-family: "Source Serif 4", Georgia, serif;
+      background: #ffffff;
+      color: #111;
+    }
+
+    /* ===== Header =====
+       Controls spacing and the thin divider under the title/subtitle. */
+    .header {
+      padding: 18px 20px 12px;
+      border-bottom: 1px solid #e6e6e6;
+      background: #ffffff;
+    }
+
+    /* ===== Title, subtitle ===== */
+    .header h1 {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.1;
+      font-family: "Source Serif 4", Georgia, serif;
+      font-weight: 400;
+      letter-spacing: 0.1px;
+      color: #111;
+    }
+
+    .header p {
+      margin: 6px 0 0;
+      color: #666;
+      font-size: 13px;
+      line-height: 1.35;
+      max-width: 720px;
+    }
+
+    /* ===== Map wrapper =====
+       Centers the map on the page and adds white space around it. */
+    .map-wrapper {
+      display: flex;
+      justify-content: center;
+      padding: 12px 20px 20px;
+      background: #ffffff;
+    }
+
+    /* ===== Map sizing =====
+       Keeps the map square and responsive.
+       - calc(100vh - 200px) helps keep it above the fold */
+    #map {
+      width: min(760px, 84vw, calc(100vh - 200px));
+      aspect-ratio: 1 / 1;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ===== Page header ===== -->
+  <div class="header">
+    <h1>Where New York City Films</h1>
+    <p>
+      Street segments most frequently used for film production, based on
+      <a href="https://data.cityofnewyork.us/City-Government/Film-Permits/tg4x-b46p/about_data" target="_blank"
+        rel="noopener noreferrer">
+        film permits
+      </a>
+      issued between 2023&nbsp;and&nbsp;2025.
+    </p>
+  </div>
+
+  <!-- ===== Map container =====
+       div MapLibre attaches the interactive map to. -->
+  <div class="map-wrapper">
+    <div id="map"></div>
+  </div>
+
+  <!-- ===== Django data injection =====
+       `segments` from view embedded as JSON. -->
+  {{ segments|json_script:"segment-data" }}
+
+  <!-- MapLibre = basemap + controls
+       deck.gl = custom visual layers on top of the basemap -->
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script src="https://unpkg.com/deck.gl@^9.0.0/dist.min.js"></script>
+
+  <script>
+    /* ===== Read injected segment data from the page ===== */
+    const segments = JSON.parse(document.getElementById("segment-data").textContent);
+
+    /* ===== Convert Django segment objects into GeoJSON-style features =====
+       deck.gl GeoJsonLayer expects standard geometry + properties structure. */
+    const features = segments.map(s => ({
+      type: "Feature",
+      geometry: s.geometry_geojson,
+      properties: {
+        segment_id: s.segment_id,
+        street: s.street,
+        borough: s.borough,
+        permit_count: s.permit_count
+      }
+    }));
+
+    /* ===== Studio reference points ===== */
+    const studios = [
+      { name: "Broadway Stages", coordinates: [-73.9413, 40.7237] },
+      { name: "Cinelease Studios Brooklyn", coordinates: [-73.9399, 40.7117] },
+      { name: "Cine Magic East River Studios", coordinates: [-73.9380, 40.7277] },
+      { name: "Cinema World", coordinates: [-73.9471, 40.7323] },
+      { name: "Kaufman Astoria Studios", coordinates: [-73.9162, 40.7563] },
+      { name: "Silvercup Studios", coordinates: [-73.9396, 40.7447] },
+      { name: "Silvercup East", coordinates: [-73.9223, 40.7426] },
+      { name: "Steiner Studios", coordinates: [-73.9723, 40.6979] },
+      { name: "Wildflower Studios", coordinates: [-73.9035, 40.7796] },
+      { name: "Brooklyn Studios", coordinates: [-73.9527, 40.7473] }
+    ];
+
+    /* ===== Area labels ===== */
+    const labels = [
+      {
+        text: "Midtown",
+        coordinates: [-73.985, 40.752]
+      },
+      {
+        text: "Greenpoint",
+        coordinates: [-73.948, 40.725]
+      },
+      {
+        text: "Long Island City",
+        coordinates: [-73.939, 40.7468]
+      },
+    ];
+
+    /* ===== Create the base interactive map ===== */
+    const map = new maplibregl.Map({
+      container: "map",
+      style: "https://basemaps.cartocdn.com/gl/positron-nolabels-gl-style/style.json",
+      center: [-73.965, 40.740],
+      zoom: 12.1,
+      minZoom: 10.8,
+      maxZoom: 13.5,
+      antialias: true,
+      maxBounds: [
+        [-74.35, 40.45],
+        [-73.55, 40.95]
+      ]
+    });
+
+    /* ===== Built in navigation, scale ===== */
+    map.addControl(new maplibregl.NavigationControl(), "top-right");
+
+    map.addControl(
+      new maplibregl.ScaleControl({
+        maxWidth: 80,
+        unit: "imperial"
+      }),
+      "bottom-left"
+    );
+
+    /* ===== deck.gl overlay =====
+       Adds custom data layers on top of the MapLibre basemap. */
+    const deckOverlay = new deck.MapboxOverlay({
+      interleaved: true,
+      layers: [
+        /* ----- Film street segments layer -----
+           Draws street segments as lines. */
+        new deck.GeoJsonLayer({
+          id: "filming-streets-core",
+          data: {
+            type: "FeatureCollection",
+            features: features
+          },
+          pickable: false,
+          stroked: true,
+          filled: false,
+          lineCapRounded: true,
+          lineJointRounded: true,
+          getLineColor: f => {
+            const c = f.properties.permit_count;
+            if (c >= 200) return [60, 80, 105];
+            return [150, 170, 190];
+          },
+          getLineWidth: f => {
+            const c = f.properties.permit_count;
+            if (c >= 200) return 4;
+            return 2;
+          },
+          lineWidthUnits: "pixels",
+          lineWidthMinPixels: 1
+        }),
+
+        /* ----- Studio markers layer ----- */
+        // new deck.IconLayer({
+        //   id: "studio-markers",
+        //   data: studios,
+        //   pickable: false,
+        //   getPosition: d => d.coordinates,
+        //   getSize: 10,
+        //   sizeUnits: "pixels",
+        //   getIcon: () => ({
+        //     url: "data:image/svg+xml;utf8," + encodeURIComponent(`
+        //       <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64">
+        //         <rect x="16" y="16" width="32" height="32" fill="rgb(85,95,105)" />
+        //       </svg>
+        //     `),
+        //     width: 64,
+        //     height: 64,
+        //     anchorY: 32
+        //   })
+        // }),
+
+        /* ----- Map labels layer ----- */
+        new deck.TextLayer({
+          id: "map-labels",
+          data: labels,
+          pickable: false,
+          getPosition: d => d.coordinates,
+          getText: d => d.text.toUpperCase(),
+          getSize: 12,
+          sizeUnits: "pixels",
+          getColor: [70, 70, 70, 200],
+          getTextAnchor: "middle",
+          getAlignmentBaseline: "center",
+          getFontFamily: "Source Serif 4, Georgia, serif",
+          getCharacterSpacing: 3,
+          getPixelOffset: [0, 0],
+        })
+      ]
+    });
+
+    new deck.GeoJsonLayer({
+      id: "filming-streets-casing",
+      data: {
+        type: "FeatureCollection",
+        features: features
+      },
+      pickable: false,
+      stroked: true,
+      filled: false,
+      getLineColor: [255, 255, 255],
+      getLineWidth: f => {
+        const c = f.properties.permit_count;
+        if (c >= 200) return 6;
+        return 4;
+      },
+      lineWidthUnits: "pixels"
+    });
+
+    /* ===== Add the deck.gl overlay after the basemap finishes loading =====
+       Then refresh the text layer once web fonts are ready, so labels render
+       with the intended font instead of an early fallback. */
+    map.on("load", () => {
+      map.addControl(deckOverlay);
+
+      document.fonts.ready.then(() => {
+        deckOverlay.setProps({
+          layers: deckOverlay.props.layers
+        });
+      });
+    });
+
+  </script>
+</body>
+
+</html>

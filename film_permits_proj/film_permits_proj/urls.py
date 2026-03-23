@@ -17,12 +17,20 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path
-from permits.views import permit_list_view, permit_map_view
+from permits.views import (
+    permit_list_view,
+    permit_map_view,
+    permit_map_deck_view,
+    filming_streets_hero,
+    filming_streets_explore
+)
 
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path('permits/', permit_list_view, name='permit_list'),
+    path("permits/", permit_list_view, name="permit_list"),
     path("map/", permit_map_view, name="permit_map"),
+    path("map-deck/", permit_map_deck_view, name="permit_map_deck"),
+path("filming-streets/", filming_streets_hero, name="filming_streets"),
+path("filming-streets/explore/", filming_streets_explore, name="filming_streets_explore"),
 ]
-

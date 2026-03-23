@@ -18,7 +18,7 @@ class Permit(models.Model):
     def __str__(self):
         return f"{self.event_id} - {self.event_type}"
 
-# V2 model: street blocks extracted from Permit.parking_held
+# V2 model: street blocks extracted from Permit.parking_held, (event table)
 class PermitBlock(models.Model):
     permit = models.ForeignKey(
         Permit,
@@ -34,3 +34,17 @@ class PermitBlock(models.Model):
     lat = models.FloatField(null=True, blank=True)
     lon = models.FloatField(null=True, blank=True)
     geocode_status = models.CharField(max_length=50, blank=True)
+    segment_id = models.CharField(max_length=50, blank=True)
+    segment_match_status = models.CharField(max_length=50, blank=True)
+
+# geo table of street segments
+# https://www.nyc.gov/content/planning/pages/resources/datasets/lion
+class StreetSegment(models.Model):
+    segment_id = models.CharField(max_length=50, unique=True)
+    street = models.CharField(max_length=255, blank=True)
+    borough = models.CharField(max_length=50, blank=True)
+    geometry_geojson = models.JSONField()
+    permit_count = models.IntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.street} ({self.segment_id})"

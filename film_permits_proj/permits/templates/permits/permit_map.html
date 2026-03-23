@@ -115,11 +115,8 @@
     rawData.forEach(p => {
       if (p.lat && p.lon) {
         const popup = `
-          <strong>Event ID:</strong> ${p.event_id}<br>
-          <strong>Type:</strong> ${p.event_type}<br>
-          <strong>Borough:</strong> ${p.borough}<br>
-          <strong>Start:</strong> ${new Date(p.start_datetime).toLocaleString()}<br>
-          <strong>End:</strong> ${new Date(p.end_datetime).toLocaleString()}
+          <strong>Block:</strong> ${p.raw_location}<br>
+          <strong>Borough:</strong> ${p.borough}
         `;
         L.marker([p.lat, p.lon], { icon: blueIcon }).bindPopup(popup).addTo(markers);
       }
