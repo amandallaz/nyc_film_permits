@@ -45,6 +45,10 @@ class StreetSegment(models.Model):
     borough = models.CharField(max_length=50, blank=True)
     geometry_geojson = models.JSONField()
     permit_count = models.IntegerField(default=0)
+    # NYC Planning 2020 Neighborhood Tabulation Areas (NTA), via centroid-in-polygon join
+    nta_code = models.CharField(max_length=20, blank=True)
+    nta_name = models.CharField(max_length=255, blank=True)
+    nta_match_status = models.CharField(max_length=50, blank=True)
 
     def __str__(self):
         return f"{self.street} ({self.segment_id})"

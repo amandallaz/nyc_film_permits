@@ -2,277 +2,1381 @@
 <html lang="en">
 
 <head>
-  <!-- Basic page metadata -->
   <meta charset="utf-8" />
-  <title>Where New York City Films</title>
+  <title>NYC’s busiest blocks for film permits</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- MapLibre styles -->
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
 
-  <!-- Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400&display=swap" rel="stylesheet">
+  <!-- NYT-adjacent stack: serif hed (Newsreader) + Franklin-style UI (Libre Franklin) -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Newsreader:ital,opsz,wght@0,400..800;0,600;0,700;1,400&display=swap"
+    rel="stylesheet"
+  />
 
   <style>
-    /* ===== Page-level defaults ===== */
+    :root {
+      /* Warm newsprint page, not stark gray-white */
+      --wall: #f7f7f5;
+      --mat: #fdfdfc;
+      --ink: #121212;
+      /* Intro block: barely cool / blue-gray vs body ink */
+      --ink-intro-hed: #161b24;
+      --ink-intro-dek: #2c3542;
+      --ink-soft: #3d3d3d;
+      --ink-faint: #727272;
+      --rule: #d9d4ce;
+      --frame: #121212;
+      --accent: #bb070f;
+      --font-display: "Newsreader", Georgia, "Times New Roman", serif;
+      --font-ui: "Libre Franklin", -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      /* Data layer: crimson-leaning red */
+      --map-nta-line: #c4c2be;
+      --map-street: #c92f42;
+      /* Street rank slider — grey UI, not map red */
+      --map-rank-fill: #91908c;
+      --map-rank-ring: #6f6e6b;
+      --map-rank-ring-hover: #4a4947;
+      /* Shared layout rail so title, body copy, and map align cleanly */
+      --content-rail: 880px;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
     html,
     body {
       margin: 0;
-      font-family: "Source Serif 4", Georgia, serif;
-      background: #ffffff;
-      color: #111;
+      min-height: 100%;
+      font-family: var(--font-ui);
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background: var(--wall);
     }
 
-    /* ===== Header =====
-       Controls spacing and the thin divider under the title/subtitle. */
-    .header {
-      padding: 18px 20px 12px;
-      border-bottom: 1px solid #e6e6e6;
-      background: #ffffff;
+    .page {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 36px 24px 52px;
     }
 
-    /* ===== Title, subtitle ===== */
-    .header h1 {
-      margin: 0;
-      font-size: 28px;
-      line-height: 1.1;
-      font-family: "Source Serif 4", Georgia, serif;
-      font-weight: 400;
-      letter-spacing: 0.1px;
-      color: #111;
-    }
-
-    .header p {
-      margin: 6px 0 0;
-      color: #666;
-      font-size: 13px;
-      line-height: 1.35;
-      max-width: 720px;
-    }
-
-    /* ===== Map wrapper =====
-       Centers the map on the page and adds white space around it. */
-    .map-wrapper {
+    .catalog-line {
+      margin: 0 0 18px;
       display: flex;
-      justify-content: center;
-      padding: 12px 20px 20px;
-      background: #ffffff;
+      align-items: center;
+      gap: 12px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      max-width: min(var(--content-rail), 100%);
+      margin-inline: auto;
     }
 
-    /* ===== Map sizing =====
-       Keeps the map square and responsive.
-       - calc(100vh - 200px) helps keep it above the fold */
+    .catalog-line::before {
+      content: "";
+      width: 36px;
+      height: 2px;
+      background: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .catalog-line a {
+      color: inherit;
+      text-decoration: none;
+      border-bottom: 1px solid var(--rule);
+      transition: color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .catalog-line a:hover {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    .header-grid {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: 1fr;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    @media (min-width: 880px) {
+      .header-grid {
+        gap: 22px;
+      }
+    }
+
+    .header-main h1 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(30px, 4.2vw, 52px);
+      font-weight: 600;
+      line-height: 1.04;
+      letter-spacing: -0.018em;
+      color: var(--ink-intro-hed);
+      text-wrap: balance;
+      max-width: 15ch;
+    }
+
+    .header-main {
+      max-width: min(var(--content-rail), 100%);
+      margin-inline: auto;
+    }
+
+    .header-dek-wrap {
+      margin-top: 10px;
+      /* Slightly narrower measure keeps long narrative text readable */
+      max-width: min(68ch, 100%);
+    }
+
+    .header-dek {
+      font-family: var(--font-ui);
+      font-size: 15.5px;
+      line-height: 1.68;
+      color: var(--ink-intro-dek);
+      font-weight: 400;
+      font-style: normal;
+      margin: 0;
+      text-wrap: pretty;
+    }
+
+    .header-dek + .header-dek {
+      margin-top: 0.9em;
+    }
+
+    .header-dek a {
+      color: var(--ink);
+      text-decoration: none;
+      border-bottom: 1px solid var(--ink);
+    }
+
+    .header-dek a:hover {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    .map-stage {
+      margin-top: 18px;
+      max-width: min(var(--content-rail), 100%);
+      margin-inline: auto;
+    }
+
+    .map-stage-header {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .map-stage-label {
+      margin: 0;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+
+    .map-stage-meta {
+      margin: 0;
+      font-size: 11px;
+      color: var(--ink-faint);
+      letter-spacing: 0.02em;
+      max-width: 100%;
+      line-height: 1.5;
+    }
+
+    .map-stage-meta strong {
+      font-weight: 600;
+      color: var(--ink-soft);
+    }
+
+    .frame-outer + .map-stage-meta {
+      margin-top: 12px;
+    }
+
+    .map-rank-control {
+      margin-top: 2px;
+      margin-bottom: 10px;
+      max-width: min(578px, 100%);
+    }
+
+    .map-rank-label {
+      display: block;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: 6px;
+    }
+
+    .map-rank-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .map-rank-meta {
+      font-family: var(--font-ui);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      white-space: nowrap;
+    }
+
+    @media (max-width: 980px) {
+      .page {
+        padding: 30px 20px 44px;
+      }
+
+      .header-main h1 {
+        font-size: clamp(28px, 5.2vw, 44px);
+      }
+
+      .header-dek-wrap {
+        max-width: min(64ch, 100%);
+      }
+    }
+
+    @media (max-width: 720px) {
+      .page {
+        padding: 22px 14px 34px;
+      }
+
+      .catalog-line {
+        margin-bottom: 14px;
+        gap: 10px;
+      }
+
+      .catalog-line::before {
+        width: 28px;
+      }
+
+      .header-grid {
+        gap: 14px;
+        padding-bottom: 12px;
+      }
+
+      .header-main h1 {
+        font-size: clamp(26px, 7vw, 34px);
+        line-height: 1.12;
+      }
+
+      .header-dek-wrap {
+        margin-top: 8px;
+        max-width: 100%;
+      }
+
+      .header-dek {
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      .map-stage {
+        margin-top: 12px;
+      }
+
+      .map-rank-control {
+        max-width: 100%;
+        margin-bottom: 12px;
+      }
+
+      .map-rank-row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .map-rank-meta {
+        white-space: normal;
+        font-size: 9px;
+        letter-spacing: 0.06em;
+      }
+
+      .map-rank-ticks {
+        font-size: 8px;
+      }
+
+      .frame-outer {
+        padding: 8px;
+      }
+
+      .map-shell {
+        aspect-ratio: 1 / 1;
+        max-height: 70vh;
+      }
+
+      .legend {
+        right: 8px;
+        bottom: 8px;
+        max-width: min(150px, 74%);
+        padding: 7px 8px;
+      }
+
+      .map-stage-meta {
+        font-size: 10px;
+      }
+
+      .method-panel-body {
+        max-width: 100%;
+      }
+    }
+
+    .map-rank-slider-wrap {
+      --rank-pct: 100%;
+      position: relative;
+      width: 100%;
+      height: 22px;
+      display: flex;
+      align-items: center;
+    }
+
+    /* Hairline track — avoids the “fat black bar” look */
+    .map-rank-track-bg {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 2px;
+      background: #e3e0db;
+      border-radius: 0;
+      pointer-events: none;
+    }
+
+    .map-rank-track-fill {
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 2px;
+      width: var(--rank-pct, 100%);
+      max-width: 100%;
+      background: var(--map-rank-fill);
+      border-radius: 0;
+      pointer-events: none;
+      transition: width 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .map-rank-control.is-dragging .map-rank-track-fill {
+      transition-duration: 0.08s;
+    }
+
+    .map-rank-control.is-intro #rank-slider {
+      pointer-events: none;
+      opacity: 1;
+    }
+
+    .map-rank-control.is-intro .map-rank-track-fill {
+      opacity: 0.55;
+      transition: none;
+    }
+
+    #rank-slider {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      height: 22px;
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      -webkit-appearance: none;
+      appearance: none;
+      cursor: pointer;
+    }
+
+    #rank-slider:focus {
+      outline: none;
+    }
+
+    #rank-slider:focus-visible {
+      outline: 1px solid var(--map-rank-ring);
+      outline-offset: 4px;
+    }
+
+    #rank-slider::-webkit-slider-runnable-track {
+      height: 2px;
+      background: transparent;
+      border-radius: 0;
+    }
+
+    /* Light handle — grey ring, separate from map street color */
+    #rank-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 11px;
+      height: 11px;
+      margin-top: -5px;
+      border-radius: 50%;
+      background: var(--mat);
+      border: 2px solid var(--map-rank-ring);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    #rank-slider:hover::-webkit-slider-thumb {
+      transform: scale(1.06);
+      border-color: var(--map-rank-ring-hover);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    #rank-slider:active::-webkit-slider-thumb {
+      transform: scale(1.03);
+      cursor: grabbing;
+    }
+
+    #rank-slider::-moz-range-track {
+      height: 2px;
+      background: transparent;
+      border-radius: 0;
+    }
+
+    #rank-slider::-moz-range-thumb {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: var(--mat);
+      border: 2px solid var(--map-rank-ring);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    #rank-slider:hover::-moz-range-thumb {
+      transform: scale(1.06);
+      border-color: var(--map-rank-ring-hover);
+    }
+
+    #rank-slider:active::-moz-range-thumb {
+      transform: scale(1.03);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .map-rank-track-fill {
+        transition: none;
+      }
+
+      .map-rank-control.is-dragging .map-rank-track-fill {
+        transition: none;
+      }
+
+      #rank-slider::-webkit-slider-thumb,
+      #rank-slider::-moz-range-thumb {
+        transition: none;
+      }
+    }
+
+    .map-rank-slider-block {
+      flex: 1;
+      min-width: 0;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .map-rank-ticks {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-top: 3px;
+      padding: 0 4px;
+      font-family: var(--font-ui);
+      font-size: 9px;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+      color: var(--ink-faint);
+      letter-spacing: 0.03em;
+    }
+
+    .map-tile-credit {
+      margin: 8px 0 0;
+      padding: 0 2px;
+      font-family: var(--font-ui);
+      font-size: 9px;
+      line-height: 1.4;
+      color: var(--ink-faint);
+    }
+
+    .map-tile-credit a {
+      color: inherit;
+      text-decoration: underline;
+      text-decoration-color: var(--rule);
+      text-underline-offset: 2px;
+    }
+
+    .map-tile-credit a:hover {
+      color: var(--ink-soft);
+    }
+
+    .method-panel {
+      margin: 10px 0 0;
+      border-top: 1px solid var(--rule);
+      padding-top: 8px;
+      max-width: 100%;
+    }
+
+    .method-panel summary {
+      cursor: pointer;
+      list-style: none;
+      font-family: var(--font-ui);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+
+    .method-panel summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .method-panel summary::before {
+      content: "+ ";
+      color: var(--ink-soft);
+    }
+
+    .method-panel[open] summary::before {
+      content: "- ";
+    }
+
+    .method-panel-body {
+      margin: 8px 0 0;
+      font-family: var(--font-ui);
+      font-size: 11px;
+      line-height: 1.55;
+      color: var(--ink-faint);
+      max-width: 72ch;
+    }
+
+    .method-panel-body p {
+      margin: 0 0 6px;
+    }
+
+    .method-panel-body p:last-child {
+      margin-bottom: 0;
+    }
+
+    .frame-outer {
+      background: var(--mat);
+      padding: 10px;
+      border: 1px solid var(--rule);
+    }
+
+    .map-shell {
+      position: relative;
+      width: 100%;
+      /* Slightly wider than tall — map shows more of the city without pushing the fold */
+      aspect-ratio: 5 / 4;
+      max-height: min(68vh, 760px);
+      margin: 0 auto;
+      border: 1px solid var(--rule);
+      overflow: hidden;
+      box-shadow: none;
+    }
+
     #map {
-      width: min(760px, 84vw, calc(100vh - 200px));
-      aspect-ratio: 1 / 1;
+      width: 100%;
+      height: 100%;
+      background: #f3f2f0;
+      /* Flat basemap — avoid “glowy” filter stacks */
+      filter: none;
+    }
+
+    /*
+     * attributionControl: false still sometimes leaves a corner chip after style load.
+     * Tile / data credits stay in .map-tile-credit (CARTO + OSM).
+     */
+    .map-shell .maplibregl-ctrl-attrib,
+    .map-shell .maplibregl-ctrl-attrib-button,
+    .map-shell .maplibregl-ctrl-attrib-inner {
+      display: none !important;
+    }
+
+    .map-shell .maplibregl-ctrl-group {
+      background: var(--mat) !important;
+      border-radius: 0 !important;
+      border: 1px solid var(--rule) !important;
+      box-shadow: none !important;
+    }
+
+    .map-shell .maplibregl-ctrl button {
+      width: 30px;
+      height: 30px;
+    }
+
+    .map-shell .maplibregl-ctrl-scale {
+      font-family: var(--font-ui) !important;
+      font-size: 10px !important;
+      font-weight: 500 !important;
+      color: var(--ink-soft) !important;
+      border-color: var(--rule) !important;
+      background: rgba(253, 253, 252, 0.96) !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+    }
+
+    .legend {
+      position: absolute;
+      right: 10px;
+      bottom: 32px;
+      z-index: 4;
+      max-width: min(168px, 78%);
+      padding: 8px 10px;
+      background: rgba(253, 253, 252, 0.97);
+      border: 1px solid var(--rule);
+      font-size: 10px;
+      line-height: 1.35;
+      color: var(--ink-soft);
+      font-family: var(--font-ui);
+      box-shadow: none;
+    }
+
+    .legend-title {
+      margin: 0 0 6px;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .legend-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .legend-swatch {
+      width: 16px;
+      flex-shrink: 0;
+      border-radius: 0;
+    }
+
+    .legend-swatch.street {
+      height: 4px;
+      background: var(--map-street);
+    }
+
+    .tooltip {
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: 6;
+      transform: translate(-50%, calc(-100% - 12px));
+      background: var(--mat);
+      border: 1px solid var(--rule);
+      padding: 10px 12px;
+      min-width: 176px;
+      max-width: 260px;
+      pointer-events: none;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      font-size: 11px;
+      line-height: 1.45;
+      color: var(--ink-soft);
+      font-family: var(--font-ui);
+      display: none;
+    }
+
+    .tooltip strong {
+      display: block;
+      margin-bottom: 8px;
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      letter-spacing: -0.01em;
+    }
+
+    .tooltip .muted {
+      display: block;
+      margin-top: 6px;
+      color: var(--ink-faint);
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .tooltip .val {
+      color: var(--ink);
+      font-weight: 500;
     }
   </style>
 </head>
 
 <body>
-  <!-- ===== Page header ===== -->
-  <div class="header">
-    <h1>Where New York City Films</h1>
-    <p>
-      Street segments most frequently used for film production, based on
+  <div class="page">
+    <p class="catalog-line">
       <a href="https://data.cityofnewyork.us/City-Government/Film-Permits/tg4x-b46p/about_data" target="_blank"
-        rel="noopener noreferrer">
-        film permits
-      </a>
-      issued between 2023&nbsp;and&nbsp;2025.
+        rel="noopener noreferrer">NYC Open Data</a>
     </p>
+
+    <header class="header-grid">
+      <div class="header-main">
+        <h1>NYC’s busiest blocks for film permits</h1>
+        <div class="header-dek-wrap">
+          <p class="header-dek">
+            When a production needs exclusive use of public space, like a sidewalk or a park, it generally requires a film permit.
+            From 2023 to 2025, NYC Open Data records {{ raw_permit_count_display|default:"—" }} approved permits.
+            To analyze activity at the street level, each permit’s location text was split into individual blocks and matched to the city’s LION street network, resulting in {{ total_segment_count_display|default:"—" }} street segments.
+          </p>
+          <p class="header-dek">
+            Where does that activity concentrate on the street grid? The busiest segments, defined here as the top 2% ({{ highlighted_segment_count|default:"—" }} blocks with at least {{ highlight_cutoff_p98|default:"—" }} appearances each), account for about {{ highlighted_permit_share|default:"—" }}% of total street-level activity. Greenpoint and Midtown, especially around Times Square, show up repeatedly, likely reflecting nearby production studios in North Brooklyn and Midtown’s concentration of iconic streets and commercial corridors that are easier to film on.
+          </p>
+        </div>
+      </div>
+    </header>
+
+    <section class="map-stage" aria-label="Map of where film permit activity is concentrated for residents">
+      <div class="map-stage-header">
+        <p class="map-stage-label">Map · Permit heavy blocks</p>
+      </div>
+      <div class="map-rank-control" id="map-rank-control">
+        <label class="map-rank-label" for="rank-slider">Street rank</label>
+        <div class="map-rank-row">
+          <div class="map-rank-slider-block">
+            <div class="map-rank-slider-wrap" id="rank-slider-wrap">
+              <div class="map-rank-track-bg"></div>
+              <div class="map-rank-track-fill"></div>
+              <input
+                type="range"
+                id="rank-slider"
+                min="1"
+                max="{% if highlighted_segment_count %}{{ highlighted_segment_count }}{% else %}1{% endif %}"
+                value="{% if highlighted_segment_count %}{{ highlighted_segment_count }}{% else %}1{% endif %}"
+                step="1"
+                aria-valuemin="1"
+                aria-valuemax="{% if highlighted_segment_count %}{{ highlighted_segment_count }}{% else %}1{% endif %}"
+                aria-label="Rank depth from 1 to busiest street count"
+              />
+            </div>
+            <div class="map-rank-ticks" id="rank-slider-ticks" aria-hidden="true">
+              <span>1</span>
+              <span id="rank-tick-max">{% if highlighted_segment_count %}{{ highlighted_segment_count }}{% else %}1{% endif %}</span>
+            </div>
+          </div>
+          <div class="map-rank-meta" aria-live="polite">
+            <span id="rank-permit-count">— permits</span>
+          </div>
+        </div>
+      </div>
+      <div class="frame-outer">
+        <div class="map-shell">
+          <div id="map"></div>
+          <div id="map-legend" class="legend">
+            <p class="legend-title">Key</p>
+            <div class="legend-row">
+              <span class="legend-swatch street"></span>
+              <span id="legend-street"></span>
+            </div>
+          </div>
+          <div id="map-tooltip" class="tooltip"></div>
+        </div>
+      </div>
+      <p class="map-stage-meta" role="note">
+        <strong>Red</strong> lines are streets in the top 2% by permit count; <strong>thicker stroke = more permits</strong> on that block. Shaded areas mark <strong>Greenpoint</strong> and <strong>Midtown Times Square</strong> for context.
+      </p>
+      <details class="method-panel">
+        <summary>How this was calculated</summary>
+        <div class="method-panel-body">
+          <p>Data source: NYC Open Data film permits, 2023–2025. Street segments are ranked by permit_count, and this map shows the top 2% only.</p>
+          <p>Percentages and slider metrics are based on permit-linked street segments, not unique permit events. A single permit can link to multiple blocks.</p>
+          <p>Neighborhood labels use Census neighborhood tabulation areas and are shown here for Greenpoint and Midtown, including Times Square.</p>
+        </div>
+      </details>
+      <p class="map-tile-credit" role="note">
+        Basemap © <a href="https://carto.com/attributions" target="_blank" rel="noopener noreferrer">CARTO</a>,
+        © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>
+        contributors.
+      </p>
+    </section>
   </div>
 
-  <!-- ===== Map container =====
-       div MapLibre attaches the interactive map to. -->
-  <div class="map-wrapper">
-    <div id="map"></div>
-  </div>
-
-  <!-- ===== Django data injection =====
-       `segments` from view embedded as JSON. -->
   {{ segments|json_script:"segment-data" }}
+  {{ nta_boundaries|json_script:"nta-boundary-data" }}
+  {{ nta_labels|json_script:"nta-label-data" }}
 
-  <!-- MapLibre = basemap + controls
-       deck.gl = custom visual layers on top of the basemap -->
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script src="https://unpkg.com/deck.gl@^9.0.0/dist.min.js"></script>
 
   <script>
-    /* ===== Read injected segment data from the page ===== */
     const segments = JSON.parse(document.getElementById("segment-data").textContent);
+    const ntaBoundaries = JSON.parse(document.getElementById("nta-boundary-data").textContent);
+    const ntaLabels = JSON.parse(document.getElementById("nta-label-data").textContent);
 
-    /* ===== Convert Django segment objects into GeoJSON-style features =====
-       deck.gl GeoJsonLayer expects standard geometry + properties structure. */
-    const features = segments.map(s => ({
-      type: "Feature",
-      geometry: s.geometry_geojson,
-      properties: {
-        segment_id: s.segment_id,
-        street: s.street,
-        borough: s.borough,
-        permit_count: s.permit_count
+    const normalizeNta = s =>
+      (s || "")
+        .toLowerCase()
+        .replace(/\u2013/g, "-")
+        .replace(/\u2014/g, "-")
+        .replace(/\u2019/g, "'");
+
+    /** Short pins for outlined story NTAs only (exact 2020 name match after normalize). */
+    const OUTLINE_PIN_LABELS = new Map([
+      ["greenpoint", "Greenpoint"],
+      ["midtown-times square", "Midtown -\nTimes Square"],
+    ]);
+
+    const persistentMapLabel = raw => {
+      const key = normalizeNta(raw).trim();
+      return OUTLINE_PIN_LABELS.get(key) || null;
+    };
+
+    /**
+     * Cartographic anchors (lon, lat): away from centroid over dense corridors.
+     * Midtown → NW of Times Square core; Greenpoint → N pocket.
+     */
+    const STORY_LABEL_POSITIONS = {
+      "Midtown -\nTimes Square": [-73.9906, 40.7609],
+      Greenpoint: [-73.9548, 40.7309],
+    };
+
+    const persistentNtaLabels = ntaLabels
+      .map(d => {
+        const short = persistentMapLabel(d.text);
+        return short ? { coordinates: d.coordinates, text: short } : null;
+      })
+      .filter(Boolean)
+      .map(d => {
+        const fixed = STORY_LABEL_POSITIONS[d.text];
+        return fixed ? { text: d.text, coordinates: fixed } : d;
+      });
+    const highlightCutoffP98 = Number("{{ highlight_cutoff_p98|default:0 }}");
+    const tooltipEl = document.getElementById("map-tooltip");
+    const setLegend = (id, text) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = text;
+    };
+    setLegend("legend-street", `Top 2% by permits (${highlightCutoffP98}+)`);
+
+    /** Matches --map-street: crimson, less pink than prior rose */
+    const RGB_STREET = [201, 47, 66];
+
+    /** Recessive context: warm gray-rose, not competing with data */
+    const NTA_LINE = [178, 132, 140];
+    const NTA_FILL = [194, 158, 165];
+    const NTA_LABEL = [87, 60, 66];
+
+    const allFeatures = segments
+      .filter(s => s.geometry_geojson && s.geometry_geojson.type)
+      .map(s => ({
+        type: "Feature",
+        geometry: s.geometry_geojson,
+        properties: {
+          segment_id: s.segment_id,
+          street: s.street || "Unknown street",
+          borough: s.borough || "",
+          nta_name: s.nta_name || "",
+          permit_count: s.permit_count || 0,
+        }
+      }));
+
+    const rankFeatures = features => {
+      const ranked = [...features].sort((a, b) => b.properties.permit_count - a.properties.permit_count);
+      ranked.forEach((feature, index) => {
+        feature.properties.rank = index + 1;
+      });
+      return ranked;
+    };
+
+    /** Global permit rank (1 = busiest) within the top-2% segment list from the server */
+    const rankedAll = rankFeatures(allFeatures);
+    const maxRank = rankedAll.length;
+    const rankNum = f => Number(f.properties.rank);
+
+    /** Min/max permits among the full top-2% list — stable width encoding when the rank slider changes. */
+    const permitCountsAll = rankedAll.map(f => Number(f.properties.permit_count) || 0);
+    const minPermitsMap = permitCountsAll.length ? Math.min(...permitCountsAll) : 0;
+    const maxPermitsMap = permitCountsAll.length ? Math.max(...permitCountsAll) : 0;
+
+    let introActive = maxRank > 1;
+    let introRevealCount = maxRank > 0 ? 1 : 0;
+    let sliderRankLimit = maxRank > 0 ? maxRank : 0;
+
+    /** How many ranks (1…N) are drawn — intro uses introRevealCount; after that the slider sets sliderRankLimit. */
+    const effectiveStreetCap = () => {
+      if (maxRank < 1) return 0;
+      if (introActive) return introRevealCount;
+      return sliderRankLimit;
+    };
+    const countVisibleStreets = () =>
+      rankedAll.filter(f => rankNum(f) <= effectiveStreetCap()).length;
+
+    const prefersReducedMotion =
+      typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const buildLayers = () => {
+      /**
+       * Core width scales gently with permits — tight range reads more editorial than chunky tubes.
+       */
+      const lineWidthPx = f => {
+        const c = Number(f.properties.permit_count) || 0;
+        const span = maxPermitsMap - minPermitsMap;
+        const t = span > 0 ? (c - minPermitsMap) / span : 0.5;
+        const clamped = Math.max(0, Math.min(1, t));
+        const eased = Math.sqrt(clamped);
+        const minCorePx = 2.15;
+        const maxCorePx = 4.35;
+        return minCorePx + eased * (maxCorePx - minCorePx);
+      };
+      /** Narrow contrast halo (not a heavy white “glow” stack) */
+      const haloExtraPx = 0.95;
+
+      const cap = effectiveStreetCap();
+      const rankTriggers = [cap, introActive, introRevealCount, sliderRankLimit];
+      /* Top–N by rank (1 = busiest). Sort by rank ascending, then reverse for GPU draw order
+         so rank 1 is painted last and sits on top when lines overlap. */
+      const visibleFeatures = rankedAll
+        .filter(f => rankNum(f) <= cap)
+        .sort((a, b) => rankNum(a) - rankNum(b));
+      const featureCollection = {
+        type: "FeatureCollection",
+        features: visibleFeatures.slice().reverse()
+      };
+
+      const layers = [];
+
+      if (ntaBoundaries.features && ntaBoundaries.features.length) {
+        layers.push(
+          new deck.GeoJsonLayer({
+            id: "nta-outlines",
+            data: ntaBoundaries,
+            /* Not pickable — large fills blocked street hover tooltips */
+            pickable: false,
+            stroked: true,
+            filled: true,
+            getFillColor: [...NTA_FILL, 34],
+            getLineColor: [...NTA_LINE, 220],
+            getLineWidth: 1.2,
+            lineWidthUnits: "pixels",
+            lineWidthMinPixels: 0.75,
+          })
+        );
       }
-    }));
 
-    /* ===== Studio reference points ===== */
-    const studios = [
-      { name: "Broadway Stages", coordinates: [-73.9413, 40.7237] },
-      { name: "Cinelease Studios Brooklyn", coordinates: [-73.9399, 40.7117] },
-      { name: "Cine Magic East River Studios", coordinates: [-73.9380, 40.7277] },
-      { name: "Cinema World", coordinates: [-73.9471, 40.7323] },
-      { name: "Kaufman Astoria Studios", coordinates: [-73.9162, 40.7563] },
-      { name: "Silvercup Studios", coordinates: [-73.9396, 40.7447] },
-      { name: "Silvercup East", coordinates: [-73.9223, 40.7426] },
-      { name: "Steiner Studios", coordinates: [-73.9723, 40.6979] },
-      { name: "Wildflower Studios", coordinates: [-73.9035, 40.7796] },
-      { name: "Brooklyn Studios", coordinates: [-73.9527, 40.7473] }
-    ];
+      const haloLayer = new deck.GeoJsonLayer({
+        id: "filming-streets-halo",
+        data: featureCollection,
+        pickable: false,
+        stroked: true,
+        filled: false,
+        /* Round caps: each segment is its own LineString; butt caps leave gaps/overlap at shared nodes */
+        lineCapRounded: true,
+        lineJointRounded: true,
+        updateTriggers: {
+          getLineColor: rankTriggers,
+          getLineWidth: rankTriggers,
+          data: rankTriggers,
+        },
+        /* Hairline separation from Positron — warm paper, not neon halo */
+        getLineColor: [250, 249, 247, 240],
+        getLineWidth: f => lineWidthPx(f) + haloExtraPx,
+        lineWidthUnits: "pixels",
+        lineWidthMinPixels: 0
+      });
 
-    /* ===== Area labels ===== */
-    const labels = [
-      {
-        text: "Midtown",
-        coordinates: [-73.985, 40.752]
-      },
-      {
-        text: "Greenpoint",
-        coordinates: [-73.948, 40.725]
-      },
-      {
-        text: "Long Island City",
-        coordinates: [-73.939, 40.7468]
-      },
-    ];
+      const coreLayer = new deck.GeoJsonLayer({
+        id: "filming-streets-core",
+        data: featureCollection,
+        pickable: true,
+        autoHighlight: true,
+        highlightColor: [15, 23, 42, 55],
+        stroked: true,
+        filled: false,
+        lineCapRounded: true,
+        lineJointRounded: true,
+        updateTriggers: {
+          getLineColor: rankTriggers,
+          getLineWidth: rankTriggers,
+          data: rankTriggers,
+        },
+        getLineColor: () => [...RGB_STREET, 255],
+        getLineWidth: f => lineWidthPx(f),
+        lineWidthUnits: "pixels",
+        lineWidthMinPixels: 0,
+        onHover: info => {
+          if (!info || !info.object) {
+            tooltipEl.style.display = "none";
+            return;
+          }
+          const props = info.object.properties;
+          const busyLabel = "Top 2% of streets (by permits)";
+          tooltipEl.innerHTML =
+            `<strong>${props.street}</strong>` +
+            `<span class="muted">Neighborhood</span><span class="val">${props.nta_name || "—"}</span>` +
+            `<span class="muted">How busy</span><span class="val">${busyLabel}</span>` +
+            `<span class="muted">Film permits</span><span class="val">${props.permit_count}</span>` +
+            `<span class="muted">Rank on this map</span><span class="val">#${props.rank} of ${maxRank}</span>`;
+          tooltipEl.style.display = "block";
+          tooltipEl.style.left = `${info.x}px`;
+          tooltipEl.style.top = `${info.y}px`;
+        }
+      });
 
-    /* ===== Create the base interactive map ===== */
+      layers.push(haloLayer, coreLayer);
+
+      if (persistentNtaLabels.length) {
+        layers.push(
+          new deck.TextLayer({
+            id: "nta-name-labels",
+            data: persistentNtaLabels,
+            pickable: false,
+            getPosition: d => d.coordinates,
+            getText: d => d.text,
+            /* Default atlas is ASCII-only; NTA names use curly quotes, en-dashes, etc. */
+            characterSet: "auto",
+            fontFamily: "Libre Franklin, Helvetica Neue, Helvetica, Arial, sans-serif",
+            fontWeight: 700,
+            fontSettings: { sdf: true, fontSize: 64 },
+            getSize: 13,
+            sizeUnits: "pixels",
+            sizeMinPixels: 10,
+            getColor: [...NTA_LABEL, 255],
+            outlineWidth: 0.65,
+            outlineColor: [255, 255, 255, 255],
+            background: false,
+            getTextAnchor: "middle",
+            getAlignmentBaseline: "center",
+            getCharacterSpacing: 0.12,
+          })
+        );
+      }
+
+      return layers;
+    };
+
     const map = new maplibregl.Map({
       container: "map",
       style: "https://basemaps.cartocdn.com/gl/positron-nolabels-gl-style/style.json",
       center: [-73.965, 40.740],
-      zoom: 12.1,
+      zoom: 11.95,
       minZoom: 10.8,
       maxZoom: 13.5,
       antialias: true,
       maxBounds: [
         [-74.35, 40.45],
         [-73.55, 40.95]
-      ]
+      ],
+      /* Hide default corner chip (MapLibre branding + compact attribution). Tile credits are in .map-tile-credit. */
+      attributionControl: false
     });
-
-    /* ===== Built in navigation, scale ===== */
-    map.addControl(new maplibregl.NavigationControl(), "top-right");
 
     map.addControl(
       new maplibregl.ScaleControl({
-        maxWidth: 80,
+        maxWidth: 72,
         unit: "imperial"
       }),
       "bottom-left"
     );
 
-    /* ===== deck.gl overlay =====
-       Adds custom data layers on top of the MapLibre basemap. */
+    const rankSlider = document.getElementById("rank-slider");
+    const rankSliderWrap = document.getElementById("rank-slider-wrap");
+    const rankControlEl = document.getElementById("map-rank-control");
+    const rankTickMax = document.getElementById("rank-tick-max");
+    const rankPermitCountEl = document.getElementById("rank-permit-count");
+    const totalPermitsAll = Number("{{ total_permits|default:0 }}");
+
+    const cumulativePermitsByRank = (() => {
+      const sums = [0];
+      let running = 0;
+      for (const f of rankedAll) {
+        running += Number(f.properties.permit_count) || 0;
+        sums.push(running);
+      }
+      return sums;
+    })();
+    const fmtInt = new Intl.NumberFormat("en-US");
+
+
+    /** Float during intro tween so thumb + fill move smoothly; null otherwise */
+    let introSliderFloat = null;
+
+    const syncRankSliderVisual = () => {
+      if (!rankSliderWrap || maxRank < 1) return;
+      const cap = introSliderFloat != null ? introSliderFloat : effectiveStreetCap();
+      let pct = 100;
+      if (maxRank > 1) {
+        pct = ((cap - 1) / (maxRank - 1)) * 100;
+      }
+      rankSliderWrap.style.setProperty("--rank-pct", `${pct}%`);
+      if (rankSlider) rankSlider.value = String(cap);
+    };
+
+    const updateRankSliderA11y = () => {
+      if (!rankSlider || maxRank < 1) return;
+      const shown = countVisibleStreets();
+      const cap = effectiveStreetCap();
+      rankSlider.setAttribute("aria-valuenow", String(cap));
+      rankSlider.setAttribute(
+        "aria-valuetext",
+        `${shown} street segments on the map, out of ${maxRank} at full range`
+      );
+    };
+
+    const currentRankCap = () => {
+      if (introActive) return introRevealCount;
+      if (rankSlider) return parseInt(rankSlider.value, 10) || sliderRankLimit;
+      return sliderRankLimit;
+    };
+
+    const updateRankPermitCount = () => {
+      if (!rankPermitCountEl) return;
+      const cap = Math.max(0, Math.min(maxRank, currentRankCap()));
+      const permits = cumulativePermitsByRank[cap] || 0;
+      const pct = totalPermitsAll > 0 ? Math.round((permits / totalPermitsAll) * 100) : 0;
+      rankPermitCountEl.textContent = `${fmtInt.format(cap)} streets · ${fmtInt.format(permits)} permits · ${pct}% of total`;
+    };
+
+    if (!maxRank) {
+      const rankCtl = document.querySelector(".map-rank-control");
+      if (rankCtl) rankCtl.style.display = "none";
+    } else if (rankSlider) {
+      rankSlider.max = String(maxRank);
+      rankSlider.min = "1";
+      rankSlider.value = String(introActive ? introRevealCount : sliderRankLimit);
+      rankSlider.setAttribute("aria-valuemin", "1");
+      rankSlider.setAttribute("aria-valuemax", String(maxRank));
+      rankSlider.setAttribute(
+        "aria-label",
+        `Street rank: 1 (busiest) through ${maxRank}. Adjust how many ranks to show.`
+      );
+      if (rankTickMax) rankTickMax.textContent = String(maxRank);
+      updateRankSliderA11y();
+      updateRankPermitCount();
+      syncRankSliderVisual();
+    }
+
     const deckOverlay = new deck.MapboxOverlay({
       interleaved: true,
-      layers: [
-        /* ----- Film street segments layer -----
-           Draws street segments as lines. */
-        new deck.GeoJsonLayer({
-          id: "filming-streets-core",
-          data: {
-            type: "FeatureCollection",
-            features: features
-          },
-          pickable: false,
-          stroked: true,
-          filled: false,
-          lineCapRounded: true,
-          lineJointRounded: true,
-          getLineColor: f => {
-            const c = f.properties.permit_count;
-            if (c >= 200) return [60, 80, 105];
-            return [150, 170, 190];
-          },
-          getLineWidth: f => {
-            const c = f.properties.permit_count;
-            if (c >= 200) return 4;
-            return 2;
-          },
-          lineWidthUnits: "pixels",
-          lineWidthMinPixels: 1
-        }),
-
-        /* ----- Studio markers layer ----- */
-        // new deck.IconLayer({
-        //   id: "studio-markers",
-        //   data: studios,
-        //   pickable: false,
-        //   getPosition: d => d.coordinates,
-        //   getSize: 10,
-        //   sizeUnits: "pixels",
-        //   getIcon: () => ({
-        //     url: "data:image/svg+xml;utf8," + encodeURIComponent(`
-        //       <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64">
-        //         <rect x="16" y="16" width="32" height="32" fill="rgb(85,95,105)" />
-        //       </svg>
-        //     `),
-        //     width: 64,
-        //     height: 64,
-        //     anchorY: 32
-        //   })
-        // }),
-
-        /* ----- Map labels layer ----- */
-        new deck.TextLayer({
-          id: "map-labels",
-          data: labels,
-          pickable: false,
-          getPosition: d => d.coordinates,
-          getText: d => d.text.toUpperCase(),
-          getSize: 12,
-          sizeUnits: "pixels",
-          getColor: [70, 70, 70, 200],
-          getTextAnchor: "middle",
-          getAlignmentBaseline: "center",
-          getFontFamily: "Source Serif 4, Georgia, serif",
-          getCharacterSpacing: 3,
-          getPixelOffset: [0, 0],
-        })
-      ]
+      layers: buildLayers()
     });
 
-    new deck.GeoJsonLayer({
-      id: "filming-streets-casing",
-      data: {
-        type: "FeatureCollection",
-        features: features
-      },
-      pickable: false,
-      stroked: true,
-      filled: false,
-      getLineColor: [255, 255, 255],
-      getLineWidth: f => {
-        const c = f.properties.permit_count;
-        if (c >= 200) return 6;
-        return 4;
-      },
-      lineWidthUnits: "pixels"
-    });
+    const refreshLayers = () => {
+      updateRankPermitCount();
+      deckOverlay.setProps({ layers: buildLayers() });
+    };
 
-    /* ===== Add the deck.gl overlay after the basemap finishes loading =====
-       Then refresh the text layer once web fonts are ready, so labels render
-       with the intended font instead of an early fallback. */
+    /**
+     * Intro draws streets one at a time by rank (1 = most permits … maxRank).
+     * Not driven by the slider — introRevealCount is the source of truth until intro ends.
+     * Deck street layers have no transitions (transitions caused all lines to pop together at the end).
+     */
+    let rankIntroCancel = null;
+    let rankIntroTimerId = null;
+    let rankIntroTweenRaf = null;
+
+    const finishStreetIntro = () => {
+      introActive = false;
+      introRevealCount = maxRank;
+      sliderRankLimit = maxRank;
+      introSliderFloat = null;
+      if (rankIntroTweenRaf) {
+        cancelAnimationFrame(rankIntroTweenRaf);
+        rankIntroTweenRaf = null;
+      }
+      if (rankControlEl) rankControlEl.classList.remove("is-intro");
+      if (rankSlider) {
+        rankSlider.removeAttribute("disabled");
+        rankSlider.setAttribute("step", "1");
+        rankSlider.value = String(maxRank);
+      }
+      rankIntroCancel = null;
+      if (rankIntroTimerId) {
+        clearTimeout(rankIntroTimerId);
+        rankIntroTimerId = null;
+      }
+      updateRankSliderA11y();
+      updateRankPermitCount();
+      syncRankSliderVisual();
+      refreshLayers();
+    };
+
+    const runRankIntroAnimation = () => {
+      if (maxRank < 2) {
+        introActive = false;
+        introRevealCount = maxRank;
+        sliderRankLimit = maxRank;
+        if (rankSlider) {
+          rankSlider.removeAttribute("disabled");
+          rankSlider.value = String(maxRank);
+        }
+        if (rankControlEl) rankControlEl.classList.remove("is-intro");
+        updateRankSliderA11y();
+        updateRankPermitCount();
+        syncRankSliderVisual();
+        refreshLayers();
+        return;
+      }
+
+      introActive = true;
+      introRevealCount = 1;
+      if (rankControlEl) rankControlEl.classList.add("is-intro");
+      if (rankSlider) {
+        rankSlider.setAttribute("disabled", "disabled");
+        rankSlider.setAttribute("step", "any");
+        rankSlider.value = "1";
+      }
+      updateRankSliderA11y();
+      updateRankPermitCount();
+      syncRankSliderVisual();
+      refreshLayers();
+
+      let cancelled = false;
+      const cancel = () => {
+        if (!introActive || cancelled) return;
+        cancelled = true;
+        introSliderFloat = null;
+        if (rankIntroTweenRaf) {
+          cancelAnimationFrame(rankIntroTweenRaf);
+          rankIntroTweenRaf = null;
+        }
+        if (rankIntroTimerId) {
+          clearTimeout(rankIntroTimerId);
+          rankIntroTimerId = null;
+        }
+        introActive = false;
+        sliderRankLimit = introRevealCount;
+        if (rankControlEl) rankControlEl.classList.remove("is-intro");
+        if (rankSlider) {
+          rankSlider.removeAttribute("disabled");
+          rankSlider.setAttribute("step", "1");
+          rankSlider.value = String(introRevealCount);
+        }
+        rankIntroCancel = null;
+        updateRankSliderA11y();
+        updateRankPermitCount();
+        syncRankSliderVisual();
+        refreshLayers();
+      };
+      rankIntroCancel = cancel;
+
+      /* ~16s full intro (20% faster than ~20s); reduced-motion ~4s */
+      const totalIntroMs = prefersReducedMotion ? 4032 : 16128;
+      const steps = Math.max(1, maxRank - 1);
+      const stepMs = Math.max(60, Math.floor(totalIntroMs / steps));
+
+      const runIntroSliderTween = (from, to, durationMs, onDone) => {
+        if (prefersReducedMotion || durationMs <= 0) {
+          introSliderFloat = null;
+          if (rankSlider) rankSlider.value = String(to);
+          syncRankSliderVisual();
+          onDone();
+          return;
+        }
+        const t0 = performance.now();
+        const tick = now => {
+          if (cancelled || !introActive) {
+            introSliderFloat = null;
+            rankIntroTweenRaf = null;
+            return;
+          }
+          const u = Math.min(1, (now - t0) / durationMs);
+          const eased = u * (2 - u);
+          introSliderFloat = from + (to - from) * eased;
+          syncRankSliderVisual();
+          if (u < 1) {
+            rankIntroTweenRaf = requestAnimationFrame(tick);
+          } else {
+            introSliderFloat = null;
+            rankIntroTweenRaf = null;
+            if (rankSlider) rankSlider.value = String(to);
+            syncRankSliderVisual();
+            onDone();
+          }
+        };
+        rankIntroTweenRaf = requestAnimationFrame(tick);
+      };
+
+      const step = () => {
+        if (cancelled || !introActive) return;
+        if (introRevealCount >= maxRank) {
+          finishStreetIntro();
+          return;
+        }
+        const tStep = performance.now();
+        introRevealCount += 1;
+        const from = introRevealCount - 1;
+        const to = introRevealCount;
+        updateRankSliderA11y();
+        introSliderFloat = from;
+        syncRankSliderVisual();
+        requestAnimationFrame(() => {
+          if (cancelled || !introActive) return;
+          refreshLayers();
+          const tweenMs = Math.min(420, Math.max(90, Math.floor(stepMs * 0.48)));
+          const scheduleNext = () => {
+            if (cancelled || !introActive) return;
+            if (introRevealCount >= maxRank) {
+              finishStreetIntro();
+              return;
+            }
+            const wait = Math.max(0, stepMs - (performance.now() - tStep));
+            rankIntroTimerId = setTimeout(step, wait);
+          };
+          runIntroSliderTween(from, to, tweenMs, scheduleNext);
+        });
+      };
+
+      rankIntroTimerId = setTimeout(step, stepMs);
+    };
+
     map.on("load", () => {
       map.addControl(deckOverlay);
-
+      if (rankSlider && maxRank >= 1) {
+        rankSlider.addEventListener("input", e => {
+          if (introActive && rankIntroCancel) rankIntroCancel();
+          sliderRankLimit = parseInt(e.target.value, 10) || 1;
+          updateRankSliderA11y();
+          updateRankPermitCount();
+          syncRankSliderVisual();
+          refreshLayers();
+        });
+        const setDragging = on => {
+          if (rankControlEl) rankControlEl.classList.toggle("is-dragging", on);
+        };
+        rankSlider.addEventListener("pointerdown", () => {
+          setDragging(true);
+          const end = () => {
+            setDragging(false);
+            window.removeEventListener("pointerup", end);
+            window.removeEventListener("pointercancel", end);
+          };
+          window.addEventListener("pointerup", end);
+          window.addEventListener("pointercancel", end);
+        });
+        rankSlider.addEventListener("blur", () => setDragging(false));
+      }
+      document.addEventListener(
+        "keydown",
+        e => {
+          if (e.key === "Escape" && introActive && rankIntroCancel) rankIntroCancel();
+        },
+        true
+      );
       document.fonts.ready.then(() => {
-        deckOverlay.setProps({
-          layers: deckOverlay.props.layers
+        refreshLayers();
+        /* TextLayer + characterSet:auto builds atlas async; second tick picks up glyphs. */
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            refreshLayers();
+            runRankIntroAnimation();
+          }, 0);
         });
       });
     });
-
   </script>
 </body>
 

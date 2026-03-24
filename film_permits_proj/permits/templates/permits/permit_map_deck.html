@@ -39,6 +39,23 @@
       width: 100%;
       height: calc(100vh - 72px);
     }
+
+    .map-tile-credit {
+      position: fixed;
+      left: 8px;
+      bottom: 6px;
+      z-index: 2;
+      margin: 0;
+      padding: 4px 6px;
+      font-size: 10px;
+      color: #666;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid #e5e5e5;
+    }
+
+    .map-tile-credit a {
+      color: #444;
+    }
   </style>
 </head>
 <body>
@@ -64,7 +81,8 @@
       zoom: 10.8,
       pitch: 35,
       bearing: 0,
-      antialias: true
+      antialias: true,
+      attributionControl: false
     });
 
     map.addControl(new maplibregl.NavigationControl(), "top-right");
