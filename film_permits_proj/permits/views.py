@@ -199,6 +199,19 @@ def filming_streets_hero(request):
     )
     nta_ctx = _nta_overlay_for_segments(segments_list)
 
+    # Map context: every segment with permits (including top 2%), grey underlay; crimson layers draw on top.
+    context_street_features = []
+    for row in base_qs.values("geometry_geojson"):
+        geom = row.get("geometry_geojson")
+        if isinstance(geom, dict) and geom.get("type"):
+            context_street_features.append(
+                {"type": "Feature", "geometry": geom, "properties": {}}
+            )
+    context_streets_geojson = {
+        "type": "FeatureCollection",
+        "features": context_street_features,
+    }
+
     return render(request, "permits/filming_streets_hero.html", {
         "segments": segments_list,
         "total_permits": total_permits,
@@ -207,6 +220,7 @@ def filming_streets_hero(request):
         "highlight_cutoff_p98": cutoff_p98,
         "highlighted_permit_share": highlighted_permit_share,
         "highlighted_segment_count": len(segments_list),
+        "context_streets_geojson": context_streets_geojson,
         "nta_boundaries": nta_ctx["nta_boundaries"],
         "nta_labels": nta_ctx["nta_labels"],
     })

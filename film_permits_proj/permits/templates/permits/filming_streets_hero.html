@@ -27,18 +27,33 @@
       --ink-faint: #727272;
       --rule: #d9d4ce;
       --frame: #121212;
-      --accent: #bb070f;
+      --accent: #3d7a9a;
       --font-display: "Newsreader", Georgia, "Times New Roman", serif;
       --font-ui: "Libre Franklin", -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
-      /* Data layer: crimson-leaning red */
+      /* Data layer (overridden in .map-stage--blueprint) */
       --map-nta-line: #c4c2be;
       --map-street: #c92f42;
-      /* Street rank slider — grey UI, not map red */
+      /* Blueprint / cyanotype plate (Prussian blue) */
+      --bp-canvas: #0c4a6e;
+      --bp-mat: #0a3850;
+      --bp-rule: #4a7a9a;
+      --bp-rule-soft: rgba(100, 148, 180, 0.35);
+      --bp-ink: #f0f8ff;
+      --bp-ink-muted: #a8c4d8;
+      --bp-water: #1a7394;
+      --bp-slider-fill: #d2f4fc;
+      --bp-slider-ring: #8ec8d8;
+      --bp-slider-ring-hover: #c0e4f0;
+      --bp-legend-bg: rgba(12, 58, 90, 0.94);
+      --bp-tooltip-bg: rgba(14, 52, 78, 0.97);
+      /* Street rank slider — grey UI, separate from map accent */
       --map-rank-fill: #91908c;
       --map-rank-ring: #6f6e6b;
       --map-rank-ring-hover: #4a4947;
-      /* Shared layout rail so title, body copy, and map align cleanly */
+      /* Shared layout rail so map and secondary blocks align cleanly */
       --content-rail: 880px;
+      /* Intro column: centered on the page, text left-aligned inside */
+      --intro-rail: min(68ch, 100%);
     }
 
     *,
@@ -64,6 +79,12 @@
       padding: 36px 24px 52px;
     }
 
+    .intro-rail {
+      max-width: var(--intro-rail);
+      margin-inline: auto;
+      text-align: left;
+    }
+
     .catalog-line {
       margin: 0 0 18px;
       display: flex;
@@ -74,8 +95,6 @@
       letter-spacing: 0.14em;
       text-transform: uppercase;
       color: var(--ink-faint);
-      max-width: min(var(--content-rail), 100%);
-      margin-inline: auto;
     }
 
     .catalog-line::before {
@@ -119,28 +138,32 @@
       font-weight: 600;
       line-height: 1.04;
       letter-spacing: -0.018em;
-      color: var(--ink-intro-hed);
+      color: var(--bp-canvas);
+      text-align: left;
       text-wrap: balance;
       max-width: 15ch;
     }
 
     .header-main {
-      max-width: min(var(--content-rail), 100%);
-      margin-inline: auto;
+      max-width: 100%;
     }
 
     .header-dek-wrap {
       margin-top: 10px;
-      /* Slightly narrower measure keeps long narrative text readable */
-      max-width: min(68ch, 100%);
+      max-width: 100%;
+      margin-inline: 0;
+      padding-top: 12px;
+      border-top: 1px solid rgba(61, 122, 154, 0.22);
+      text-align: left;
     }
 
     .header-dek {
-      font-family: var(--font-ui);
-      font-size: 15.5px;
-      line-height: 1.68;
+      /* Match title feel: serif for the intro narrative */
+      font-family: var(--font-display);
+      font-size: 16px;
+      line-height: 1.7;
       color: var(--ink-intro-dek);
-      font-weight: 400;
+      font-weight: 450;
       font-style: normal;
       margin: 0;
       text-wrap: pretty;
@@ -165,6 +188,177 @@
       margin-top: 18px;
       max-width: min(var(--content-rail), 100%);
       margin-inline: auto;
+    }
+
+    /* Prussian blueprint field + pastel blue highlight */
+    .map-stage--blueprint {
+      --map-street: #d2f4fc;
+      /* Context layer swatch — creamy warm white + alpha (matches Deck CONTEXT_STREET) */
+      --map-context-street: rgba(255, 248, 238, 0.52);
+      /* Matches Deck NTA_LINE */
+      --map-nta-line: #80afcd;
+    }
+
+    .map-stage--blueprint .map-stage-label,
+    .map-stage--blueprint .map-rank-label {
+      color: var(--bp-canvas);
+    }
+
+    .map-stage--blueprint .map-rank-meta {
+      color: var(--bp-ink-muted);
+    }
+
+    .map-stage--blueprint .map-rank-ticks {
+      color: rgba(180, 210, 230, 0.88);
+    }
+
+    .map-stage--blueprint .map-rank-track-bg {
+      background: var(--bp-rule-soft);
+    }
+
+    .map-stage--blueprint .map-rank-track-fill {
+      background: var(--bp-slider-fill);
+    }
+
+    .map-stage--blueprint #rank-slider:focus-visible {
+      outline-color: var(--bp-slider-ring);
+    }
+
+    .map-stage--blueprint #rank-slider::-webkit-slider-thumb {
+      background-color: var(--bp-canvas);
+      background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2032%2032%27%3E%3Crect%20x%3D%276%27%20y%3D%2710%27%20width%3D%2720%27%20height%3D%2712%27%20rx%3D%272%27%20fill%3D%27none%27%20stroke%3D%27%23d2f4fc%27%20stroke-width%3D%272%27/%3E%3Ccircle%20cx%3D%2711%27%20cy%3D%2716%27%20r%3D%271.8%27%20fill%3D%27%23d2f4fc%27/%3E%3Ccircle%20cx%3D%2716%27%20cy%3D%2716%27%20r%3D%271.8%27%20fill%3D%27%23d2f4fc%27/%3E%3Ccircle%20cx%3D%2721%27%20cy%3D%2716%27%20r%3D%271.8%27%20fill%3D%27%23d2f4fc%27/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 78% 78%;
+      border-color: var(--bp-slider-ring);
+      box-shadow: 0 1px 4px rgba(0, 20, 40, 0.45);
+    }
+
+    .map-stage--blueprint #rank-slider:hover::-webkit-slider-thumb {
+      border-color: var(--bp-slider-ring-hover);
+    }
+
+    .map-stage--blueprint #rank-slider::-moz-range-thumb {
+      background-color: var(--bp-canvas);
+      background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2032%2032%27%3E%3Crect%20x%3D%276%27%20y%3D%2710%27%20width%3D%2720%27%20height%3D%2712%27%20rx%3D%272%27%20fill%3D%27none%27%20stroke%3D%27%23d2f4fc%27%20stroke-width%3D%272%27/%3E%3Ccircle%20cx%3D%2711%27%20cy%3D%2716%27%20r%3D%271.8%27%20fill%3D%27%23d2f4fc%27/%3E%3Ccircle%20cx%3D%2716%27%20cy%3D%2716%27%20r%3D%271.8%27%20fill%3D%27%23d2f4fc%27/%3E%3Ccircle%20cx%3D%2721%27%20cy%3D%2716%27%20r%3D%271.8%27%20fill%3D%27%23d2f4fc%27/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 78% 78%;
+      border-color: var(--bp-slider-ring);
+      box-shadow: 0 1px 4px rgba(0, 20, 40, 0.45);
+    }
+
+    .map-stage--blueprint #rank-slider:hover::-moz-range-thumb {
+      border-color: var(--bp-slider-ring-hover);
+    }
+
+    .map-stage--blueprint .frame-outer {
+      background: var(--bp-mat);
+      border-color: var(--bp-rule);
+    }
+
+    .map-stage--blueprint .map-shell {
+      border-color: rgba(100, 140, 170, 0.45);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+    }
+
+    .map-stage--blueprint #map {
+      position: relative;
+      z-index: 1;
+      background: var(--bp-canvas);
+    }
+
+    .map-stage--blueprint .map-blueprint-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+      background-size: 32px 32px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+    }
+
+    .map-stage--blueprint .map-blueprint-overlay::before,
+    .map-stage--blueprint .map-blueprint-overlay::after {
+      content: "";
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border-color: rgba(255, 255, 255, 0.35);
+      border-style: solid;
+      border-width: 0;
+    }
+
+    .map-stage--blueprint .map-blueprint-overlay::before {
+      top: 10px;
+      left: 10px;
+      border-top-width: 1px;
+      border-left-width: 1px;
+    }
+
+    .map-stage--blueprint .map-blueprint-overlay::after {
+      bottom: 10px;
+      right: 10px;
+      border-bottom-width: 1px;
+      border-right-width: 1px;
+    }
+
+    .map-stage--blueprint .map-blueprint-north {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 3;
+      pointer-events: none;
+      color: rgba(232, 244, 255, 0.92);
+    }
+
+    .map-stage--blueprint .map-compass-svg {
+      display: block;
+      width: 52px;
+      height: 52px;
+    }
+
+    .map-stage--blueprint .map-compass-svg text {
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 600;
+      fill: currentColor;
+    }
+
+    .map-stage--blueprint .map-shell .maplibregl-ctrl-group {
+      background: var(--bp-canvas) !important;
+      border-color: var(--bp-rule) !important;
+    }
+
+    .map-stage--blueprint .legend {
+      background: var(--bp-legend-bg);
+      border-color: rgba(100, 140, 170, 0.4);
+      color: var(--bp-ink-muted);
+    }
+
+    .map-stage--blueprint .legend-title {
+      color: rgba(160, 190, 210, 0.85);
+    }
+
+    .map-stage--blueprint .tooltip {
+      background: var(--bp-tooltip-bg);
+      border-color: rgba(100, 140, 170, 0.4);
+      color: var(--bp-ink-muted);
+      box-shadow: 0 4px 20px rgba(0, 20, 40, 0.35);
+    }
+
+    .map-stage--blueprint .tooltip strong {
+      color: var(--bp-ink);
+    }
+
+    .map-stage--blueprint .tooltip .muted {
+      color: rgba(140, 175, 200, 0.82);
+    }
+
+    .map-stage--blueprint .tooltip .val {
+      color: var(--bp-ink);
     }
 
     .map-stage-header {
@@ -227,12 +421,28 @@
 
     .map-rank-meta {
       font-family: var(--font-ui);
+      color: var(--ink-faint);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      white-space: nowrap;
+    }
+
+    .map-rank-meta-primary {
       font-size: 10px;
       font-weight: 600;
       letter-spacing: 0.05em;
       text-transform: uppercase;
-      color: var(--ink-faint);
-      white-space: nowrap;
+      color: inherit;
+    }
+
+    .map-rank-meta-secondary {
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      opacity: 0.78;
+      color: inherit;
     }
 
     @media (max-width: 980px) {
@@ -244,9 +454,6 @@
         font-size: clamp(28px, 5.2vw, 44px);
       }
 
-      .header-dek-wrap {
-        max-width: min(64ch, 100%);
-      }
     }
 
     @media (max-width: 720px) {
@@ -275,7 +482,6 @@
 
       .header-dek-wrap {
         margin-top: 8px;
-        max-width: 100%;
       }
 
       .header-dek {
@@ -318,10 +524,34 @@
       }
 
       .legend {
-        right: 8px;
+        right: auto;
+        left: 8px;
         bottom: 8px;
-        max-width: min(150px, 74%);
-        padding: 7px 8px;
+        max-width: min(138px, 74%);
+        padding: 6px 7px;
+        font-size: 9px;
+        line-height: 1.25;
+      }
+
+      .legend-title {
+        font-size: 8px;
+        margin-bottom: 4px;
+      }
+
+      .legend-row {
+        gap: 6px;
+      }
+
+      .legend-swatch {
+        width: 14px;
+      }
+
+      .legend-swatch.street {
+        height: 3px;
+      }
+
+      .legend-swatch.context-street {
+        height: 2px;
       }
 
       .map-stage-meta {
@@ -414,11 +644,15 @@
     /* Light handle — grey ring, separate from map street color */
     #rank-slider::-webkit-slider-thumb {
       -webkit-appearance: none;
-      width: 11px;
-      height: 11px;
-      margin-top: -5px;
+      width: 13px;
+      height: 13px;
+      margin-top: -6px;
       border-radius: 50%;
-      background: var(--mat);
+      background-color: var(--mat);
+      background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2032%2032%27%3E%3Crect%20x%3D%276%27%20y%3D%2710%27%20width%3D%2720%27%20height%3D%2712%27%20rx%3D%272%27%20fill%3D%27none%27%20stroke%3D%27%230c4a6e%27%20stroke-width%3D%272%27/%3E%3Ccircle%20cx%3D%2711%27%20cy%3D%2716%27%20r%3D%271.8%27%20fill%3D%27%230c4a6e%27/%3E%3Ccircle%20cx%3D%2716%27%20cy%3D%2716%27%20r%3D%271.8%27%20fill%3D%27%230c4a6e%27/%3E%3Ccircle%20cx%3D%2721%27%20cy%3D%2716%27%20r%3D%271.8%27%20fill%3D%27%230c4a6e%27/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 78% 78%;
       border: 2px solid var(--map-rank-ring);
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
       transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
@@ -442,10 +676,14 @@
     }
 
     #rank-slider::-moz-range-thumb {
-      width: 11px;
-      height: 11px;
+      width: 13px;
+      height: 13px;
       border-radius: 50%;
-      background: var(--mat);
+      background-color: var(--mat);
+      background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2032%2032%27%3E%3Crect%20x%3D%276%27%20y%3D%2710%27%20width%3D%2720%27%20height%3D%2712%27%20rx%3D%272%27%20fill%3D%27none%27%20stroke%3D%27%230c4a6e%27%20stroke-width%3D%272%27/%3E%3Ccircle%20cx%3D%2711%27%20cy%3D%2716%27%20r%3D%271.8%27%20fill%3D%27%230c4a6e%27/%3E%3Ccircle%20cx%3D%2716%27%20cy%3D%2716%27%20r%3D%271.8%27%20fill%3D%27%230c4a6e%27/%3E%3Ccircle%20cx%3D%2721%27%20cy%3D%2716%27%20r%3D%271.8%27%20fill%3D%27%230c4a6e%27/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 78% 78%;
       border: 2px solid var(--map-rank-ring);
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
       transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
@@ -612,17 +850,6 @@
       height: 30px;
     }
 
-    .map-shell .maplibregl-ctrl-scale {
-      font-family: var(--font-ui) !important;
-      font-size: 10px !important;
-      font-weight: 500 !important;
-      color: var(--ink-soft) !important;
-      border-color: var(--rule) !important;
-      background: rgba(253, 253, 252, 0.96) !important;
-      border-radius: 0 !important;
-      box-shadow: none !important;
-    }
-
     .legend {
       position: absolute;
       right: 10px;
@@ -659,6 +886,22 @@
       margin-bottom: 0;
     }
 
+    .legend-row--street {
+      align-items: flex-start;
+    }
+
+    .legend-street-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      line-height: 1.25;
+      min-width: 0;
+    }
+
+    .legend-street-sub {
+      opacity: 0.88;
+    }
+
     .legend-swatch {
       width: 16px;
       flex-shrink: 0;
@@ -668,6 +911,11 @@
     .legend-swatch.street {
       height: 4px;
       background: var(--map-street);
+    }
+
+    .legend-swatch.context-street {
+      height: 2px;
+      background: var(--map-context-street);
     }
 
     .tooltip {
@@ -719,33 +967,38 @@
 
 <body>
   <div class="page">
-    <p class="catalog-line">
-      <a href="https://data.cityofnewyork.us/City-Government/Film-Permits/tg4x-b46p/about_data" target="_blank"
-        rel="noopener noreferrer">NYC Open Data</a>
-    </p>
+    <div class="intro-rail">
+      <p class="catalog-line">
+        <a href="https://data.cityofnewyork.us/City-Government/Film-Permits/tg4x-b46p/about_data" target="_blank"
+          rel="noopener noreferrer">NYC Open Data</a>
+      </p>
 
-    <header class="header-grid">
-      <div class="header-main">
-        <h1>NYC’s busiest blocks for film permits</h1>
-        <div class="header-dek-wrap">
-          <p class="header-dek">
-            When a production needs exclusive use of public space, like a sidewalk or a park, it generally requires a film permit.
-            From 2023 to 2025, NYC Open Data records {{ raw_permit_count_display|default:"—" }} approved permits.
-            To analyze activity at the street level, each permit’s location text was split into individual blocks and matched to the city’s LION street network, resulting in {{ total_segment_count_display|default:"—" }} street segments.
-          </p>
-          <p class="header-dek">
-            Where does that activity concentrate on the street grid? The busiest segments, defined here as the top 2% ({{ highlighted_segment_count|default:"—" }} blocks with at least {{ highlight_cutoff_p98|default:"—" }} appearances each), account for about {{ highlighted_permit_share|default:"—" }}% of total street-level activity. Greenpoint and Midtown, especially around Times Square, show up repeatedly, likely reflecting nearby production studios in North Brooklyn and Midtown’s concentration of iconic streets and commercial corridors that are easier to film on.
-          </p>
+      <header class="header-grid">
+        <div class="header-main">
+          <h1>NYC’s busiest blocks for film permits</h1>
+          <div class="header-dek-wrap">
+            <p class="header-dek">
+              When a production needs exclusive use of public space, like a sidewalk or a park, it generally requires a film permit.
+              From 2023 to 2025, NYC Open Data records 16,024 approved permits across much of the city.
+            </p>
+            <p class="header-dek">
+              Each permit's location was split into individual blocks and matched to the city's LION street network, resulting in 5,042 street segments.
+              The busiest segments, defined here as the top 2% (104 blocks with at least 38 appearances each), account for about 39% of total street-level activity.
+            </p>
+            <p class="header-dek">
+              Greenpoint and Midtown Times Square show up repeatedly, likely reflecting nearby production studios in North Brooklyn and Midtown's concentration of famous streets and commercial corridors that are friendlier to film on.
+            </p>
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+    </div>
 
-    <section class="map-stage" aria-label="Map of where film permit activity is concentrated for residents">
+    <section class="map-stage map-stage--blueprint" aria-label="Map of where film permit activity is concentrated for residents">
       <div class="map-stage-header">
         <p class="map-stage-label">Map · Permit heavy blocks</p>
       </div>
       <div class="map-rank-control" id="map-rank-control">
-        <label class="map-rank-label" for="rank-slider">Street rank</label>
+        <label class="map-rank-label" for="rank-slider">Top streets shown</label>
         <div class="map-rank-row">
           <div class="map-rank-slider-block">
             <div class="map-rank-slider-wrap" id="rank-slider-wrap">
@@ -769,30 +1022,64 @@
             </div>
           </div>
           <div class="map-rank-meta" aria-live="polite">
-            <span id="rank-permit-count">— permits</span>
+            <span id="rank-permit-count" class="map-rank-meta-primary">Showing — streets</span>
+            <span id="rank-summary" class="map-rank-meta-secondary">— permits · —% of total</span>
           </div>
         </div>
       </div>
       <div class="frame-outer">
         <div class="map-shell">
           <div id="map"></div>
+          <div class="map-blueprint-overlay" aria-hidden="true"></div>
+          <div class="map-blueprint-north" role="img" aria-label="Compass: north at top of map">
+            <svg class="map-compass-svg" viewBox="0 0 100 100" aria-hidden="true">
+              <g fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="50" cy="50" r="40" opacity="0.95" />
+                <circle cx="50" cy="50" r="33" opacity="0.75" />
+                <line x1="50" y1="50" x2="50" y2="14" />
+                <line x1="50" y1="50" x2="50" y2="86" />
+                <line x1="50" y1="50" x2="14" y2="50" />
+                <line x1="50" y1="50" x2="86" y2="50" />
+                <line x1="50" y1="50" x2="24.5" y2="24.5" opacity="0.45" stroke-width="0.7" />
+                <line x1="50" y1="50" x2="75.5" y2="24.5" opacity="0.45" stroke-width="0.7" />
+                <line x1="50" y1="50" x2="24.5" y2="75.5" opacity="0.45" stroke-width="0.7" />
+                <line x1="50" y1="50" x2="75.5" y2="75.5" opacity="0.45" stroke-width="0.7" />
+              </g>
+              <polygon
+                points="50,9 45.5,20 54.5,20"
+                fill="currentColor"
+                stroke="none"
+                opacity="0.95"
+              />
+              <text x="50" y="30" text-anchor="middle" dominant-baseline="middle">N</text>
+              <text x="50" y="78" text-anchor="middle" dominant-baseline="middle">S</text>
+              <text x="82" y="51" text-anchor="middle" dominant-baseline="middle">E</text>
+              <text x="18" y="51" text-anchor="middle" dominant-baseline="middle">W</text>
+            </svg>
+          </div>
           <div id="map-legend" class="legend">
             <p class="legend-title">Key</p>
             <div class="legend-row">
-              <span class="legend-swatch street"></span>
-              <span id="legend-street"></span>
+              <span class="legend-swatch context-street"></span>
+              <span id="legend-context"></span>
+            </div>
+            <div class="legend-row legend-row--street">
+              <span class="legend-swatch street" aria-hidden="true"></span>
+              <div id="legend-street" class="legend-street-text"></div>
             </div>
           </div>
           <div id="map-tooltip" class="tooltip"></div>
         </div>
       </div>
       <p class="map-stage-meta" role="note">
-        <strong>Red</strong> lines are streets in the top 2% by permit count; <strong>thicker stroke = more permits</strong> on that block. Shaded areas mark <strong>Greenpoint</strong> and <strong>Midtown Times Square</strong> for context.
+        <strong>White</strong> traces every street segment with permit activity. <strong>Light blue</strong> highlights the top 2% of streets by permit count.
+        <br />
+        Shaded areas mark the most frequently filmed neighborhoods Greenpoint and Midtown Times Square for context.
       </p>
       <details class="method-panel">
         <summary>How this was calculated</summary>
         <div class="method-panel-body">
-          <p>Data source: NYC Open Data film permits, 2023–2025. Street segments are ranked by permit_count, and this map shows the top 2% only.</p>
+          <p>Data source: NYC Open Data film permits, 2023–2025. Street segments are ranked by permit_count. The context layer (creamy warm white) includes every segment with at least one permit; the highlight color and the slider emphasize the top 2%.</p>
           <p>Percentages and slider metrics are based on permit-linked street segments, not unique permit events. A single permit can link to multiple blocks.</p>
           <p>Neighborhood labels use Census neighborhood tabulation areas and are shown here for Greenpoint and Midtown, including Times Square.</p>
         </div>
@@ -806,6 +1093,7 @@
   </div>
 
   {{ segments|json_script:"segment-data" }}
+  {{ context_streets_geojson|json_script:"context-street-data" }}
   {{ nta_boundaries|json_script:"nta-boundary-data" }}
   {{ nta_labels|json_script:"nta-label-data" }}
 
@@ -813,7 +1101,46 @@
   <script src="https://unpkg.com/deck.gl@^9.0.0/dist.min.js"></script>
 
   <script>
+    /** Deck + MapLibre paint colors (page chrome uses CSS :root / .map-stage--blueprint). */
+    const PALETTE = {
+      deck: {
+        rgbStreet: [210, 244, 255],
+        /* Full network — creamy warm white (not cool ice-blue) */
+        contextStreet: [255, 248, 238, 54],
+        ntaLine: [128, 175, 205],
+        ntaFill: [165, 188, 208],
+        /* Neighborhood labels: darker steel blue (not top-2% ice) */
+        ntaLabelFill: [95, 145, 195],
+        ntaLabelStroke: [8, 28, 52],
+        haloLine: [2, 26, 44, 252],
+        highlightHover: [225, 252, 255, 175],
+      },
+      basemap: {
+        plate: "#0c4a6e",
+        water: "#1a7394",
+        waterway: "#58aad8",
+        building: "#0a3850",
+        buildingTop: "#0f4258",
+        buildingOutline: "#1a5a78",
+        boundary: "#7ec0e8",
+      },
+    };
+
+    /** Greenpoint / Midtown map labels — set `true` to show again */
+    const SHOW_NTA_NAME_LABELS = true;
+    /** Borough labels preview */
+    const SHOW_BOROUGH_LABELS = true;
+
+    const BOROUGH_LABELS = [
+      { text: "MANHATTAN", coordinates: [-73.971, 40.783] },
+      { text: "BROOKLYN", coordinates: [-73.955, 40.644] },
+      { text: "QUEENS", coordinates: [-73.833, 40.735] },
+      { text: "BRONX", coordinates: [-73.885, 40.855] },
+      { text: "STATEN ISLAND", coordinates: [-74.12, 40.585] },
+    ];
+
     const segments = JSON.parse(document.getElementById("segment-data").textContent);
+    const contextStreets = JSON.parse(document.getElementById("context-street-data").textContent);
     const ntaBoundaries = JSON.parse(document.getElementById("nta-boundary-data").textContent);
     const ntaLabels = JSON.parse(document.getElementById("nta-label-data").textContent);
 
@@ -840,8 +1167,8 @@
      * Midtown → NW of Times Square core; Greenpoint → N pocket.
      */
     const STORY_LABEL_POSITIONS = {
-      "Midtown -\nTimes Square": [-73.9906, 40.7609],
-      Greenpoint: [-73.9548, 40.7309],
+      "Midtown -\nTimes Square": [-73.9906, 40.7634],
+      Greenpoint: [-73.9539, 40.7323],
     };
 
     const persistentNtaLabels = ntaLabels
@@ -860,15 +1187,42 @@
       const el = document.getElementById(id);
       if (el) el.textContent = text;
     };
-    setLegend("legend-street", `Top 2% by permits (${highlightCutoffP98}+)`);
+    setLegend("legend-context", "All streets with permits");
+    const legendStreetEl = document.getElementById("legend-street");
+    if (legendStreetEl) {
+      legendStreetEl.innerHTML = `<span class="legend-street-line">Top 2% of streets</span><span class="legend-street-sub">(${highlightCutoffP98} permits and above)</span>`;
+    }
 
-    /** Matches --map-street: crimson, less pink than prior rose */
-    const RGB_STREET = [201, 47, 66];
+    const d = PALETTE.deck;
+    /** Top 2% — high-luminance focal accent */
+    const RGB_STREET = d.rgbStreet;
+    /** NTA story zones */
+    const NTA_LINE = d.ntaLine;
+    const NTA_FILL = d.ntaFill;
+    /** Map labels: darker steel-blue fill + navy stroke */
+    const NTA_LABEL_FILL = d.ntaLabelFill;
+    const NTA_LABEL_STROKE = d.ntaLabelStroke;
+    /** Full network (context) */
+    const CONTEXT_STREET = d.contextStreet;
 
-    /** Recessive context: warm gray-rose, not competing with data */
-    const NTA_LINE = [178, 132, 140];
-    const NTA_FILL = [194, 158, 165];
-    const NTA_LABEL = [87, 60, 66];
+    const contextStreetLayers =
+      contextStreets.features && contextStreets.features.length
+        ? [
+            new deck.GeoJsonLayer({
+              id: "context-streets",
+              data: contextStreets,
+              pickable: false,
+              stroked: true,
+              filled: false,
+              lineCapRounded: true,
+              lineJointRounded: true,
+              getLineColor: CONTEXT_STREET,
+              getLineWidth: 0.92,
+              lineWidthUnits: "pixels",
+              lineWidthMinPixels: 0.58,
+            }),
+          ]
+        : [];
 
     const allFeatures = segments
       .filter(s => s.geometry_geojson && s.geometry_geojson.type)
@@ -897,11 +1251,6 @@
     const maxRank = rankedAll.length;
     const rankNum = f => Number(f.properties.rank);
 
-    /** Min/max permits among the full top-2% list — stable width encoding when the rank slider changes. */
-    const permitCountsAll = rankedAll.map(f => Number(f.properties.permit_count) || 0);
-    const minPermitsMap = permitCountsAll.length ? Math.min(...permitCountsAll) : 0;
-    const maxPermitsMap = permitCountsAll.length ? Math.max(...permitCountsAll) : 0;
-
     let introActive = maxRank > 1;
     let introRevealCount = maxRank > 0 ? 1 : 0;
     let sliderRankLimit = maxRank > 0 ? maxRank : 0;
@@ -919,20 +1268,8 @@
       typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const buildLayers = () => {
-      /**
-       * Core width scales gently with permits — tight range reads more editorial than chunky tubes.
-       */
-      const lineWidthPx = f => {
-        const c = Number(f.properties.permit_count) || 0;
-        const span = maxPermitsMap - minPermitsMap;
-        const t = span > 0 ? (c - minPermitsMap) / span : 0.5;
-        const clamped = Math.max(0, Math.min(1, t));
-        const eased = Math.sqrt(clamped);
-        const minCorePx = 2.15;
-        const maxCorePx = 4.35;
-        return minCorePx + eased * (maxCorePx - minCorePx);
-      };
-      /** Narrow contrast halo (not a heavy white “glow” stack) */
+      /** Slightly wider core + halo so top 2% read as the focal layer */
+      const accentCorePx = 2.65;
       const haloExtraPx = 0.95;
 
       const cap = effectiveStreetCap();
@@ -952,20 +1289,33 @@
       if (ntaBoundaries.features && ntaBoundaries.features.length) {
         layers.push(
           new deck.GeoJsonLayer({
+            id: "nta-outlines-glow",
+            data: ntaBoundaries,
+            pickable: false,
+            stroked: true,
+            filled: false,
+            getLineColor: [...NTA_LINE, 52],
+            getLineWidth: 2.8,
+            lineWidthUnits: "pixels",
+            lineWidthMinPixels: 1.6,
+          }),
+          new deck.GeoJsonLayer({
             id: "nta-outlines",
             data: ntaBoundaries,
             /* Not pickable — large fills blocked street hover tooltips */
             pickable: false,
             stroked: true,
             filled: true,
-            getFillColor: [...NTA_FILL, 34],
-            getLineColor: [...NTA_LINE, 220],
-            getLineWidth: 1.2,
+            getFillColor: [...NTA_FILL, 14],
+            getLineColor: [...NTA_LINE, 134],
+            getLineWidth: 1.3,
             lineWidthUnits: "pixels",
-            lineWidthMinPixels: 0.75,
+            lineWidthMinPixels: 0.8,
           })
         );
       }
+
+      for (const lyr of contextStreetLayers) layers.push(lyr);
 
       const haloLayer = new deck.GeoJsonLayer({
         id: "filming-streets-halo",
@@ -978,12 +1328,11 @@
         lineJointRounded: true,
         updateTriggers: {
           getLineColor: rankTriggers,
-          getLineWidth: rankTriggers,
           data: rankTriggers,
         },
-        /* Hairline separation from Positron — warm paper, not neon halo */
-        getLineColor: [250, 249, 247, 240],
-        getLineWidth: f => lineWidthPx(f) + haloExtraPx,
+        /* Deep plate halo — stronger edge so bright core “lights up” */
+        getLineColor: PALETTE.deck.haloLine,
+        getLineWidth: accentCorePx + haloExtraPx,
         lineWidthUnits: "pixels",
         lineWidthMinPixels: 0
       });
@@ -993,18 +1342,17 @@
         data: featureCollection,
         pickable: true,
         autoHighlight: true,
-        highlightColor: [15, 23, 42, 55],
+        highlightColor: PALETTE.deck.highlightHover,
         stroked: true,
         filled: false,
         lineCapRounded: true,
         lineJointRounded: true,
         updateTriggers: {
           getLineColor: rankTriggers,
-          getLineWidth: rankTriggers,
           data: rankTriggers,
         },
         getLineColor: () => [...RGB_STREET, 255],
-        getLineWidth: f => lineWidthPx(f),
+        getLineWidth: accentCorePx,
         lineWidthUnits: "pixels",
         lineWidthMinPixels: 0,
         onHover: info => {
@@ -1028,7 +1376,7 @@
 
       layers.push(haloLayer, coreLayer);
 
-      if (persistentNtaLabels.length) {
+      if (SHOW_NTA_NAME_LABELS && persistentNtaLabels.length) {
         layers.push(
           new deck.TextLayer({
             id: "nta-name-labels",
@@ -1036,21 +1384,46 @@
             pickable: false,
             getPosition: d => d.coordinates,
             getText: d => d.text,
-            /* Default atlas is ASCII-only; NTA names use curly quotes, en-dashes, etc. */
             characterSet: "auto",
             fontFamily: "Libre Franklin, Helvetica Neue, Helvetica, Arial, sans-serif",
             fontWeight: 700,
             fontSettings: { sdf: true, fontSize: 64 },
-            getSize: 13,
+            getSize: 11,
             sizeUnits: "pixels",
-            sizeMinPixels: 10,
-            getColor: [...NTA_LABEL, 255],
-            outlineWidth: 0.65,
-            outlineColor: [255, 255, 255, 255],
+            sizeMinPixels: 9,
+            getColor: [...NTA_LABEL_FILL, 255],
+            outlineWidth: 2.55,
+            outlineColor: [...NTA_LABEL_STROKE, 255],
             background: false,
             getTextAnchor: "middle",
             getAlignmentBaseline: "center",
-            getCharacterSpacing: 0.12,
+            getCharacterSpacing: 0.08,
+          })
+        );
+      }
+
+      if (SHOW_BOROUGH_LABELS) {
+        layers.push(
+          new deck.TextLayer({
+            id: "borough-name-labels",
+            data: BOROUGH_LABELS,
+            pickable: false,
+            getPosition: d => d.coordinates,
+            getText: d => d.text,
+            characterSet: "auto",
+            fontFamily: "Libre Franklin, Helvetica Neue, Helvetica, Arial, sans-serif",
+            fontWeight: 700,
+            fontSettings: { sdf: true, fontSize: 64 },
+            getSize: 14,
+            sizeUnits: "pixels",
+            sizeMinPixels: 12,
+            getColor: [208, 230, 245, 230],
+            outlineWidth: 1.45,
+            outlineColor: [6, 22, 40, 240],
+            background: false,
+            getTextAnchor: "middle",
+            getAlignmentBaseline: "center",
+            getCharacterSpacing: 0.17,
           })
         );
       }
@@ -1074,19 +1447,93 @@
       attributionControl: false
     });
 
-    map.addControl(
-      new maplibregl.ScaleControl({
-        maxWidth: 72,
-        unit: "imperial"
-      }),
-      "bottom-left"
-    );
+    // Keep MapLibre + absolute overlays (legend/tooltip) in sync with responsive layout changes.
+    // Mobile viewport/orientation changes sometimes require an explicit resize.
+    const mapEl = document.getElementById("map");
+    if (mapEl && typeof ResizeObserver !== "undefined") {
+      const ro = new ResizeObserver(() => map.resize());
+      ro.observe(mapEl);
+    } else {
+      window.addEventListener("resize", () => map.resize());
+    }
+    map.on("load", () => map.resize());
+
+    /**
+     * Carto Positron draws roads/bridges/tunnels/rails as vector line layers.
+     * Hide them so only our GeoJSON streets read as the street network.
+     */
+    const hideCartoBasemapStreets = () => {
+      const style = map.getStyle();
+      if (!style || !style.layers) return;
+      for (const layer of style.layers) {
+        const id = layer.id;
+        const hide =
+          id.startsWith("road_") ||
+          id.startsWith("bridge_") ||
+          id.startsWith("tunnel_") ||
+          id === "rail" ||
+          id === "rail_dash";
+        if (!hide) continue;
+        try {
+          map.setLayoutProperty(id, "visibility", "none");
+        } catch (_) {
+          /* skip layers that do not support visibility */
+        }
+      }
+    };
+
+    /** Carto Positron recolored to a blueprint / working-drawing plate */
+    const applyBlueprintBasemapStyle = () => {
+      const b = PALETTE.basemap;
+      const tryPaint = (layerId, prop, value) => {
+        try {
+          map.setPaintProperty(layerId, prop, value);
+        } catch (_) {}
+      };
+      const tryLayout = (layerId, prop, value) => {
+        try {
+          map.setLayoutProperty(layerId, prop, value);
+        } catch (_) {}
+      };
+
+      tryPaint("background", "background-color", b.plate);
+      tryPaint("water", "fill-color", b.water);
+      tryLayout("water_shadow", "visibility", "none");
+      tryPaint("waterway", "line-color", b.waterway);
+      tryPaint("waterway", "line-opacity", 0.4);
+
+      [
+        "landcover",
+        "park_national_park",
+        "park_nature_reserve",
+        "landuse_residential",
+        "landuse",
+      ].forEach(id => tryLayout(id, "visibility", "none"));
+
+      tryPaint("building", "fill-color", b.building);
+      tryPaint("building-top", "fill-color", b.buildingTop);
+      tryPaint("building-top", "fill-outline-color", b.buildingOutline);
+
+      tryLayout("aeroway-runway", "visibility", "none");
+      tryLayout("aeroway-taxiway", "visibility", "none");
+
+      [
+        "boundary_county",
+        "boundary_state",
+        "boundary_country_outline",
+        "boundary_country_inner",
+      ].forEach(id => {
+        tryPaint(id, "line-color", b.boundary);
+        tryPaint(id, "line-opacity", 0.3);
+      });
+    };
 
     const rankSlider = document.getElementById("rank-slider");
     const rankSliderWrap = document.getElementById("rank-slider-wrap");
     const rankControlEl = document.getElementById("map-rank-control");
     const rankTickMax = document.getElementById("rank-tick-max");
     const rankPermitCountEl = document.getElementById("rank-permit-count");
+    const rankSummaryEl = document.getElementById("rank-summary");
     const totalPermitsAll = Number("{{ total_permits|default:0 }}");
 
     const cumulativePermitsByRank = (() => {
@@ -1133,11 +1580,12 @@
     };
 
     const updateRankPermitCount = () => {
-      if (!rankPermitCountEl) return;
+      if (!rankPermitCountEl || !rankSummaryEl) return;
       const cap = Math.max(0, Math.min(maxRank, currentRankCap()));
       const permits = cumulativePermitsByRank[cap] || 0;
       const pct = totalPermitsAll > 0 ? Math.round((permits / totalPermitsAll) * 100) : 0;
-      rankPermitCountEl.textContent = `${fmtInt.format(cap)} streets · ${fmtInt.format(permits)} permits · ${pct}% of total`;
+      rankPermitCountEl.textContent = `Showing ${fmtInt.format(cap)} streets`;
+      rankSummaryEl.textContent = `${fmtInt.format(permits)} permits · ${pct}% of total`;
     };
 
     if (!maxRank) {
@@ -1334,6 +1782,8 @@
     };
 
     map.on("load", () => {
+      applyBlueprintBasemapStyle();
+      hideCartoBasemapStreets();
       map.addControl(deckOverlay);
       if (rankSlider && maxRank >= 1) {
         rankSlider.addEventListener("input", e => {
