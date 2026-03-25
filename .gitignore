@@ -2,3 +2,12 @@ venv
 __pycache__
 db.sqlite3
 .env
+
+# macOS
+.DS_Store
+
+# Local GIS / large data not needed in repo
+film_permits_proj/lion_data/
+
+# Local notes
+notes/
