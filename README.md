@@ -1,10 +1,11 @@
 # Mapping NYC Film Permits  
+Transform raw NYC film permit records into an interactive, street level map of production activity.
 
-Built an end-to-end data product that transforms raw NYC film permit records into an interactive, street-level map of production activity.
+Live: https://amandalaz.com/filming-streets/
 
-New York City publishes film permit records through the Mayor’s Office of Media and Entertainment via the NYC Open Data portal. While the dataset includes information about productions, dates, and neighborhoods, permit locations are stored as free-text descriptions of street blocks rather than geographic coordinates.
+![Filming Streets Map](https://github.com/user-attachments/assets/ff65cc9c-5680-495a-b637-f2f611ca1e94)
 
-This project builds a data pipeline that transforms those textual records into structured geospatial data, enabling street-level visualization and analysis of filming activity across NYC.
+New York City publishes film permit records through the Mayor’s Office of Media and Entertainment via the NYC Open Data portal. The dataset includes information about productions, dates, and neighborhoods. Permit locations are stored as text descriptions of street blocks rather than geographic coordinates. This project builds a data pipeline that transforms those text records into structured geospatial data, enabling street level visualization and analysis of filming activity across NYC.
 
 ---
 
@@ -29,11 +30,11 @@ This project builds a data pipeline that transforms those textual records into s
 ## What this project does
 
 - Transforms unstructured permit location text into structured geospatial data  
-- Maps permit activity onto NYC’s street network  
+- Maps permit activity onto NYC’s LION street network  
 - Enables street-level visualization of filming activity  
-- Identifies high-density filming corridors  
-- Adds neighborhood-level context for recurring production hotspots  
-- Supports interactive filtering and exploration in the map interface  
+    - Identifies high-density filming corridors  
+    - Adds neighborhood-level context for recurring production hotspots  
+    - Supports interactive filtering and exploration in the map interface  
 
 ---
 
@@ -42,7 +43,7 @@ This project builds a data pipeline that transforms those textual records into s
 - Django  
 - Python  
 - GeoPandas  
-- Leaflet (interactive mapping)  
+- MapLibre + deck.gl 
 - NYC Open Data API  
 - NYC Geoclient API  
 - NYC LION street network  
@@ -104,7 +105,7 @@ This keeps deployment fast and avoids running memory-intensive GeoPandas workflo
 
 ---
 
-### 1. Rebuild data locally
+### 1. Rebuild data locally if needed
 
 ```bash
 python manage.py load_permits
@@ -137,7 +138,7 @@ chown user:user /path/to/project/db.sqlite3
 
 # update code
 cd /path/to/project
-git pull origin master
+git pull origin master (or main or your deploy branch)
 
 # activate environment
 source venv/bin/activate
@@ -147,6 +148,7 @@ cd film_permits_proj
 python manage.py migrate
 
 # restart services
+python manage.py collectstatic --noinput
 sudo systemctl restart app_name
 sudo systemctl restart nginx
 ```
@@ -165,8 +167,6 @@ https://your-domain.com/filming-streets/
 
 ### Notes
 
-- The full data pipeline is designed to run locally due to memory constraints  
-- Production is optimized for serving precomputed data  
 - If routes change, update Django `urls.py` and your reverse proxy configuration 
 
 ## Data Model
@@ -255,17 +255,9 @@ To reduce API usage, geocoding is deduplicated across unique street block + boro
 The final dataset supports:
 
 - Street-level visualization of filming activity  
-- Time-based filtering via interactive UI  
+- Filtering via interactive UI  
 - Identification of high-density filming corridors  
-- Exploration of production patterns across NYC  
-
----
-
-## Notes
-
-- Designed with a local-first processing model due to the size of geospatial data  
-- Production server is optimized for serving precomputed results, not running heavy geospatial processing  
-- Demonstrates transforming messy real-world data into structured, analysis-ready features  
+- Exploration of production patterns across NYC   
 
 ---
 
