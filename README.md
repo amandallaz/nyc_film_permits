@@ -50,6 +50,125 @@ This project builds a data pipeline that transforms those textual records into s
 
 ---
 
+## Quickstart
+
+### Setup
+
+```bash
+git clone https://github.com/amandallaz/nyc_film_permits.git
+cd nyc_film_permits
+
+python3 -m venv venv
+source venv/bin/activate
+
+pip install -r requirements.txt
+```
+
+### Initialize the app
+
+```bash
+cd film_permits_proj
+python manage.py migrate
+```
+
+### Build the dataset (local)
+
+```bash
+python manage.py load_permits
+python manage.py build_permit_blocks
+python manage.py geocode_permit_blocks
+python manage.py load_lion_segments
+python manage.py match_block_segments
+python manage.py assign_segment_nta
+```
+
+### Run locally
+
+```bash
+python manage.py runserver
+```
+
+Open:
+- http://127.0.0.1:8000/filming-streets/
+
+---
+
+## Deploy
+
+This project uses a **local-first deployment model**:
+
+- heavy geospatial processing runs locally  
+- production serves precomputed results  
+
+This keeps deployment fast and avoids running memory-intensive GeoPandas workflows on a small server.
+
+---
+
+### 1. Rebuild data locally
+
+```bash
+python manage.py load_permits
+python manage.py build_permit_blocks
+python manage.py geocode_permit_blocks
+python manage.py load_lion_segments
+python manage.py match_block_segments
+python manage.py assign_segment_nta
+```
+
+---
+
+### 2. Transfer database to server
+
+Run from your local machine:
+
+```bash
+scp path/to/db.sqlite3 user@your-server:/path/to/project/
+```
+
+---
+
+### 3. Update and restart server
+
+```bash
+ssh user@your-server
+
+# set correct permissions
+chown user:user /path/to/project/db.sqlite3
+
+# update code
+cd /path/to/project
+git pull origin master
+
+# activate environment
+source venv/bin/activate
+cd film_permits_proj
+
+# apply migrations
+python manage.py migrate
+
+# restart services
+sudo systemctl restart app_name
+sudo systemctl restart nginx
+```
+
+---
+
+### 4. Verify
+
+Open your deployed app:
+
+```text
+https://your-domain.com/filming-streets/
+```
+
+---
+
+### Notes
+
+- The full data pipeline is designed to run locally due to memory constraints  
+- Production is optimized for serving precomputed data  
+- If routes change, update Django `urls.py` and your reverse proxy configuration 
+
 ## Data Model
 
 ### Permit  
